@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 3.20)
+project(ShimmerTest VERSION 1.0.0 LANGUAGES CXX)
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Add JUCE submodule
+add_subdirectory(JUCE)
+
+# Simple test executable
+add_executable(ShimmerTest
+    test_build.cpp
+)
+
+target_link_libraries(ShimmerTest
+    juce::juce_core
+    juce::juce_audio_processors
+) 

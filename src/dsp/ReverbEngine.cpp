@@ -782,17 +782,25 @@ void ReverbEngine::updateEarlyReflections()
 
 void ReverbEngine::updateDelayTimes()
 {
-    // Базовые времена задержек
-    std::vector<float> baseCombDelays = {50.0f, 53.0f, 61.0f, 68.0f, 72.0f, 78.0f}; // ms
-    std::vector<float> baseAllPassDelays = {8.0f, 15.0f}; // ms
-    
-    float roomScale = calculateRoomScale(params.roomSize);
+    // ИСПРАВЛЕНО: Используем ту же логику что и при инициализации!
+    // Получаем правильно вычисленные задержки
+    auto newDelaysL = getScaledCombDelays(false);
+    auto newDelaysR = getScaledCombDelays(true);
+    auto newAllPassDelaysL = getScaledAllPassDelays(false);
+    auto newAllPassDelaysR = getScaledAllPassDelays(true);
     
     // Обновляем delay time для comb фильтров - левый канал
-    for (size_t i = 0; i < combFiltersL.size() && i < baseCombDelays.size(); ++i)
+    for (size_t i = 0; i < combFiltersL.size() && i < newDelaysL.size(); ++i)
     {
-        size_t newDelayTime = static_cast<size_t>(baseCombDelays[i] * roomScale * sampleRate / 1000.0f);
-        newDelayTime = MathUtils::clamp(newDelayTime, static_cast<size_t>(1), combFiltersL[i].buffer.size() - 1);
+        size_t newDelayTime = static_cast<size_t>(newDelaysL[i]);
+        
+        // ИСПРАВЛЕНО: Проверяем нужно ли увеличить буфер
+        size_t requiredBufferSize = newDelayTime + blockSize;
+        if (requiredBufferSize > combFiltersL[i].buffer.size())
+        {
+            // Увеличиваем буфер сохраняя содержимое
+            combFiltersL[i].buffer.resize(requiredBufferSize, 0.0f);
+        }
         
         if (combFiltersL[i].delayTime != newDelayTime)
         {
@@ -806,11 +814,17 @@ void ReverbEngine::updateDelayTimes()
     }
     
     // Обновляем delay time для comb фильтров - правый канал
-    for (size_t i = 0; i < combFiltersR.size() && i < baseCombDelays.size(); ++i)
+    for (size_t i = 0; i < combFiltersR.size() && i < newDelaysR.size(); ++i)
     {
-        size_t newDelayTime = static_cast<size_t>(baseCombDelays[i] * roomScale * sampleRate / 1000.0f);
-        newDelayTime += params.stereoSpread; // Добавляем stereoSpread
-        newDelayTime = MathUtils::clamp(newDelayTime, static_cast<size_t>(1), combFiltersR[i].buffer.size() - 1);
+        size_t newDelayTime = static_cast<size_t>(newDelaysR[i]);
+        
+        // ИСПРАВЛЕНО: Проверяем нужно ли увеличить буфер
+        size_t requiredBufferSize = newDelayTime + blockSize;
+        if (requiredBufferSize > combFiltersR[i].buffer.size())
+        {
+            // Увеличиваем буфер сохраняя содержимое
+            combFiltersR[i].buffer.resize(requiredBufferSize, 0.0f);
+        }
         
         if (combFiltersR[i].delayTime != newDelayTime)
         {
@@ -824,10 +838,17 @@ void ReverbEngine::updateDelayTimes()
     }
     
     // Обновляем delay time для all-pass фильтров - левый канал
-    for (size_t i = 0; i < allPassFiltersL.size() && i < baseAllPassDelays.size(); ++i)
+    for (size_t i = 0; i < allPassFiltersL.size() && i < newAllPassDelaysL.size(); ++i)
     {
-        size_t newDelayTime = static_cast<size_t>(baseAllPassDelays[i] * roomScale * sampleRate / 1000.0f);
-        newDelayTime = MathUtils::clamp(newDelayTime, static_cast<size_t>(1), allPassFiltersL[i].buffer.size() - 1);
+        size_t newDelayTime = static_cast<size_t>(newAllPassDelaysL[i]);
+        
+        // ИСПРАВЛЕНО: Проверяем нужно ли увеличить буфер
+        size_t requiredBufferSize = newDelayTime + blockSize;
+        if (requiredBufferSize > allPassFiltersL[i].buffer.size())
+        {
+            // Увеличиваем буфер сохраняя содержимое
+            allPassFiltersL[i].buffer.resize(requiredBufferSize, 0.0f);
+        }
         
         if (allPassFiltersL[i].delayTime != newDelayTime)
         {
@@ -841,11 +862,17 @@ void ReverbEngine::updateDelayTimes()
     }
     
     // Обновляем delay time для all-pass фильтров - правый канал
-    for (size_t i = 0; i < allPassFiltersR.size() && i < baseAllPassDelays.size(); ++i)
+    for (size_t i = 0; i < allPassFiltersR.size() && i < newAllPassDelaysR.size(); ++i)
     {
-        size_t newDelayTime = static_cast<size_t>(baseAllPassDelays[i] * roomScale * sampleRate / 1000.0f);
-        newDelayTime += params.stereoSpread; // Добавляем stereoSpread
-        newDelayTime = MathUtils::clamp(newDelayTime, static_cast<size_t>(1), allPassFiltersR[i].buffer.size() - 1);
+        size_t newDelayTime = static_cast<size_t>(newAllPassDelaysR[i]);
+        
+        // ИСПРАВЛЕНО: Проверяем нужно ли увеличить буфер
+        size_t requiredBufferSize = newDelayTime + blockSize;
+        if (requiredBufferSize > allPassFiltersR[i].buffer.size())
+        {
+            // Увеличиваем буфер сохраняя содержимое
+            allPassFiltersR[i].buffer.resize(requiredBufferSize, 0.0f);
+        }
         
         if (allPassFiltersR[i].delayTime != newDelayTime)
         {

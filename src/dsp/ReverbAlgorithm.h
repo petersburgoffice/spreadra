@@ -69,7 +69,6 @@ public:
     void setDecayTime(float decayTimeSeconds);
     void setDryWet(float dryWetPercent);
     void setStereoWidth(float stereoWidthPercent);
-    void setMonoMode(bool monoMode);
 
     //==============================================================================
     // DSP компоненты

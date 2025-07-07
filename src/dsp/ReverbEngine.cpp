@@ -52,35 +52,13 @@ void ReverbEngine::process(const float* input, float* output, int numSamples)
     if (!isPrepared)
         return;
         
-    processMono(input, output, numSamples);
+    // ИСПРАВЛЕНО: Используем processStereo с дублированием входа для mono
+    processStereo(input, input, output, output, numSamples);
 }
 
 void ReverbEngine::processStereo(const float* inputL, const float* inputR, 
                                  float* outputL, float* outputR, int numSamples)
 {
-    // НОВОЕ: Переключение между mono и stereo режимами
-    if (params.monoMode)
-    {
-        // Mono режим: создаем моно микс из stereo входа
-        std::vector<float> monoInput(numSamples);
-        for (int i = 0; i < numSamples; ++i)
-        {
-            monoInput[i] = (inputL[i] + inputR[i]) * 0.5f;
-        }
-        
-        // Обрабатываем в mono
-        std::vector<float> monoOutput(numSamples);
-        processMono(monoInput.data(), monoOutput.data(), numSamples);
-        
-        // Дублируем mono выход на оба канала
-        for (int i = 0; i < numSamples; ++i)
-        {
-            outputL[i] = monoOutput[i];
-            outputR[i] = monoOutput[i];
-        }
-        return;
-    }
-    
     // Stereo режим (оригинальный код)
     if (!isPrepared || combFiltersL.empty() || combFiltersR.empty())
     {
@@ -346,12 +324,6 @@ void ReverbEngine::setDryWetMix(float mixPercent)
     params.dryWetMix = juce::jlimit(0.0f, 100.0f, mixPercent);
     if (isPrepared)
         updateStereoMixing();
-}
-
-void ReverbEngine::setMonoMode(bool monoMode)
-{
-    params.monoMode = monoMode;
-    // Параметр применяется немедленно в processStereo()
 }
 
 //==============================================================================
@@ -885,80 +857,6 @@ void ReverbEngine::updateDelayTimes()
 //==============================================================================
 // Обработка сигнала
 //==============================================================================
-
-void ReverbEngine::processMono(const float* input, float* output, int numSamples)
-{
-    if (!isPrepared || combFiltersL.empty() || allPassFiltersL.empty())
-    {
-        // Если не готов, просто копируем input в output
-        for (int i = 0; i < numSamples; ++i)
-            output[i] = input[i];
-        return;
-    }
-
-    // ИСПРАВЛЕНО: Добавляем pre-delay как в stereo версии
-    std::vector<float> preDelayedInput(numSamples);
-    for (int i = 0; i < numSamples; ++i)
-    {
-        float delayedSample = preDelayBufferL[preDelayIndexL];
-        preDelayBufferL[preDelayIndexL] = input[i];
-        preDelayIndexL = (preDelayIndexL + 1) % preDelayBufferL.size();
-        preDelayedInput[i] = delayedSample;
-    }
-
-    // Массив для early reflections
-    std::vector<float> earlyOutput(numSamples, 0.0f);
-    
-    // Обработка early reflections
-    processEarlyReflections(preDelayedInput.data(), earlyOutput.data(), numSamples, earlyReflectionsL);
-
-    // Смешиваем pre-delayed input с early reflections для comb фильтров
-    std::vector<float> combInput(numSamples);
-    for (int i = 0; i < numSamples; ++i)
-    {
-        // ИСПРАВЛЕНО: Практически убираем early reflections для устранения delay эффекта
-        combInput[i] = preDelayedInput[i] * 0.95f + earlyOutput[i] * 0.05f; // Было 0.7f + 0.3f
-    }
-
-    // Обработка comb фильтров (параллельно)
-    std::vector<float> combOutput(numSamples, 0.0f);
-    
-    for (size_t i = 0; i < combFiltersL.size(); ++i)
-    {
-        std::vector<float> filterOutput(numSamples);
-        processCombFilter(combInput.data(), filterOutput.data(), numSamples, combFiltersL[i]);
-        
-        // Смешиваем выходы comb фильтров
-        for (int j = 0; j < numSamples; ++j)
-        {
-            combOutput[j] += filterOutput[j];
-        }
-    }
-
-    // Нормализация comb выхода
-    float combNormalizationFactor = 1.0f / static_cast<float>(combFiltersL.size());
-    for (int i = 0; i < numSamples; ++i)
-    {
-        combOutput[i] *= combNormalizationFactor;
-    }
-
-    // Обработка all-pass фильтров (последовательно)
-    std::vector<float> allPassOutput = combOutput;
-    for (auto& filter : allPassFiltersL)
-    {
-        processAllPassFilter(allPassOutput.data(), allPassOutput.data(), numSamples, filter);
-    }
-
-    // ИСПРАВЛЕНО: Добавляем dry/wet микширование как в stereo версии
-    for (int i = 0; i < numSamples; ++i)
-    {
-        float wetSignal = allPassOutput[i];
-        float drySignal = input[i];
-        
-        // Используем тот же алгоритм микширования что и в stereo
-        output[i] = wetSignal * wet1 + drySignal * dry;
-    }
-}
 
 void ReverbEngine::processCombFilter(const float* input, float* output, int numSamples, CombFilter& filter)
 {

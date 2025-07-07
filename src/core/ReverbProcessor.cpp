@@ -199,10 +199,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReverbProcessor::createParam
         juce::String(), juce::AudioProcessorParameter::genericParameter,
         [](float value, int) { return juce::String(value, 0) + "%"; }));
     
-    // НОВЫЙ: Mono/Stereo switch
-    params.push_back(std::make_unique<juce::AudioParameterBool>(
-        "monoMode", "Mono Mode", false));
-    
     return { params.begin(), params.end() };
 }
 
@@ -214,7 +210,6 @@ void ReverbProcessor::updateParameters()
     float decayTime = parameters.getRawParameterValue("decayTime")->load();
     float dryWet = parameters.getRawParameterValue("dryWet")->load();
     float stereoWidth = parameters.getRawParameterValue("stereoWidth")->load();
-    bool monoMode = parameters.getRawParameterValue("monoMode")->load() > 0.5f;
     
     // Обновление параметров reverb-ядра
     reverbAlgorithm.setPitchShift(pitchShift);
@@ -222,7 +217,6 @@ void ReverbProcessor::updateParameters()
     reverbAlgorithm.setDecayTime(decayTime);
     reverbAlgorithm.setDryWet(dryWet);
     reverbAlgorithm.setStereoWidth(stereoWidth);
-    reverbAlgorithm.setMonoMode(monoMode);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

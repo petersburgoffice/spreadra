@@ -43,7 +43,6 @@ public:
         float preDelay = 0.0f;         // ms, 0-500
         float stereoWidth = 100.0f;    // %, 0-150
         float dryWetMix = 50.0f;       // %, 0-100 (0=dry, 100=wet)
-        bool monoMode = false;         // true=mono reverb, false=stereo reverb
         int numCombFilters = 6;        // Фиксированное количество по Schroeder
         int numAllPassFilters = 2;     // Фиксированное количество по Schroeder
         int stereoSpread = 23;         // Разница в задержках между каналами (сэмплы)
@@ -60,7 +59,6 @@ public:
     void setPreDelay(float preDelayMs);
     void setStereoWidth(float widthPercent);
     void setDryWetMix(float mixPercent);
-    void setMonoMode(bool monoMode);
 
 private:
     //==============================================================================
@@ -169,7 +167,6 @@ private:
     static float calculateFeedback(float decayTime, int delayTime, double sampleRate);
     static float calculateRoomScale(float roomSize);
 
-    void processMono(const float* input, float* output, int numSamples);
     void processCombFilter(const float* input, float* output, int numSamples, CombFilter& filter);
     void processAllPassFilter(const float* input, float* output, int numSamples, AllPassFilter& filter);
     void processEarlyReflections(const float* input, float* output, int numSamples, 

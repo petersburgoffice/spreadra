@@ -120,12 +120,6 @@ void ReverbAlgorithm::setStereoWidth(float stereoWidthPercent)
     reverbEngine.setStereoWidth(params.stereoWidth);
 }
 
-void ReverbAlgorithm::setMonoMode(bool monoMode)
-{
-    // Устанавливаем mono режим в ReverbEngine
-    reverbEngine.setMonoMode(monoMode);
-}
-
 //==============================================================================
 float ReverbAlgorithm::getCpuUsage() const
 {

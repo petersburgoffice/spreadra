@@ -13,6 +13,14 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     addAndMakeVisible(dryWetSlider);
     addAndMakeVisible(stereoWidthSlider);
     
+    // Создание кнопки mono/stereo
+    addAndMakeVisible(monoModeButton);
+    monoModeButton.setButtonText("MONO");
+    monoModeButton.setToggleState(false, juce::dontSendNotification);
+    monoModeButton.setColour(juce::ToggleButton::textColourId, juce::Colours::white);
+    monoModeButton.setColour(juce::ToggleButton::tickColourId, juce::Colours::lightgreen);
+    monoModeButton.setColour(juce::ToggleButton::tickDisabledColourId, juce::Colours::darkgrey);
+    
     // Настройка слайдеров
     pitchShiftSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     pitchShiftSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
@@ -51,6 +59,10 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     stereoWidthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         processor.getValueTreeState(), "stereoWidth", stereoWidthSlider);
     
+    // Подключение кнопки mono/stereo
+    monoModeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        processor.getValueTreeState(), "monoMode", monoModeButton);
+    
     // Настройка label для версии
     versionLabel.setText("v" + juce::String(PLUGIN_VERSION_STRING), juce::dontSendNotification);
     versionLabel.setFont(juce::Font(juce::FontOptions().withHeight(10.0f)));
@@ -76,6 +88,9 @@ void ReverbEditor::paint(juce::Graphics& g)
     g.drawText("Decay Time", decayTimeSlider.getBounds().translated(0, -25), juce::Justification::centred);
     g.drawText("Dry/Wet", dryWetSlider.getBounds().translated(0, -25), juce::Justification::centred);
     g.drawText("Stereo Width", stereoWidthSlider.getBounds().translated(0, -25), juce::Justification::centred);
+    
+    // Заголовок для кнопки mono/stereo
+    g.drawText("Mode", monoModeButton.getBounds().translated(0, -25), juce::Justification::centred);
 }
 
 void ReverbEditor::resized()
@@ -106,6 +121,9 @@ void ReverbEditor::resized()
     middleRow.removeFromLeft(spacing);
     
     stereoWidthSlider.setBounds(middleRow.removeFromLeft(sliderWidth));
+    
+    // Третий ряд - кнопка mono/stereo
+    monoModeButton.setBounds(bottomRow.removeFromLeft(sliderWidth).reduced(20, 40));
     
     // Размещение версии в правом нижнем углу
     versionLabel.setBounds(getWidth() - 80, getHeight() - 25, 70, 20);

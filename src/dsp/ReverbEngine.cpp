@@ -58,8 +58,40 @@ void ReverbEngine::process(const float* input, float* output, int numSamples)
 void ReverbEngine::processStereo(const float* inputL, const float* inputR, 
                                  float* outputL, float* outputR, int numSamples)
 {
-    if (!isPrepared)
+    // НОВОЕ: Переключение между mono и stereo режимами
+    if (params.monoMode)
+    {
+        // Mono режим: создаем моно микс из stereo входа
+        std::vector<float> monoInput(numSamples);
+        for (int i = 0; i < numSamples; ++i)
+        {
+            monoInput[i] = (inputL[i] + inputR[i]) * 0.5f;
+        }
+        
+        // Обрабатываем в mono
+        std::vector<float> monoOutput(numSamples);
+        processMono(monoInput.data(), monoOutput.data(), numSamples);
+        
+        // Дублируем mono выход на оба канала
+        for (int i = 0; i < numSamples; ++i)
+        {
+            outputL[i] = monoOutput[i];
+            outputR[i] = monoOutput[i];
+        }
         return;
+    }
+    
+    // Stereo режим (оригинальный код)
+    if (!isPrepared || combFiltersL.empty() || combFiltersR.empty())
+    {
+        // Если не готов, просто копируем входы в выходы
+        for (int i = 0; i < numSamples; ++i)
+        {
+            outputL[i] = inputL[i];
+            outputR[i] = inputR[i];
+        }
+        return;
+    }
     
     // Создаем моно-сигнал для подачи на реверб (как в Freeverb)
     std::vector<float> monoInput(numSamples);
@@ -311,9 +343,15 @@ void ReverbEngine::setStereoWidth(float widthPercent)
 
 void ReverbEngine::setDryWetMix(float mixPercent)
 {
-    params.dryWetMix = MathUtils::clamp(mixPercent, 0.0f, 100.0f);
+    params.dryWetMix = juce::jlimit(0.0f, 100.0f, mixPercent);
     if (isPrepared)
         updateStereoMixing();
+}
+
+void ReverbEngine::setMonoMode(bool monoMode)
+{
+    params.monoMode = monoMode;
+    // Параметр применяется немедленно в processStereo()
 }
 
 //==============================================================================
@@ -858,60 +896,35 @@ void ReverbEngine::processMono(const float* input, float* output, int numSamples
         return;
     }
 
-    // Проверяем наличие сигнала для первого лога (только один раз)
-    static bool firstSignalLogged = false;
-    if (!firstSignalLogged)
+    // ИСПРАВЛЕНО: Добавляем pre-delay как в stereo версии
+    std::vector<float> preDelayedInput(numSamples);
+    for (int i = 0; i < numSamples; ++i)
     {
-        float maxAmplitude = 0.0f;
-        for (int i = 0; i < numSamples; ++i)
-        {
-            float absValue = std::abs(input[i]);
-            if (absValue > maxAmplitude)
-                maxAmplitude = absValue;
-        }
-        
-        if (maxAmplitude > 0.001f) // Сигнал есть
-        {
-            // УБРАНО: SHIMMER_LOG_DEBUG - больше не логируем каждый блок
-            firstSignalLogged = true;
-        }
+        float delayedSample = preDelayBufferL[preDelayIndexL];
+        preDelayBufferL[preDelayIndexL] = input[i];
+        preDelayIndexL = (preDelayIndexL + 1) % preDelayBufferL.size();
+        preDelayedInput[i] = delayedSample;
     }
 
     // Массив для early reflections
     std::vector<float> earlyOutput(numSamples, 0.0f);
     
     // Обработка early reflections
-    for (auto& reflection : earlyReflectionsL)
-    {
-        for (int i = 0; i < numSamples; ++i)
-        {
-            float delayed = reflection.buffer[reflection.writeIndex];
-            reflection.buffer[reflection.writeIndex] = input[i];
-            reflection.writeIndex = (reflection.writeIndex + 1) % reflection.buffer.size();
-            
-            earlyOutput[i] += delayed * reflection.gain;
-        }
-    }
+    processEarlyReflections(preDelayedInput.data(), earlyOutput.data(), numSamples, earlyReflectionsL);
 
-    // УБРАНО: Debug лог для early reflections
-
-    // Смешиваем input с early reflections для comb фильтров
+    // Смешиваем pre-delayed input с early reflections для comb фильтров
     std::vector<float> combInput(numSamples);
     for (int i = 0; i < numSamples; ++i)
     {
         // ИСПРАВЛЕНО: Практически убираем early reflections для устранения delay эффекта
-        combInput[i] = input[i] * 0.95f + earlyOutput[i] * 0.05f; // Было 0.7f + 0.3f
+        combInput[i] = preDelayedInput[i] * 0.95f + earlyOutput[i] * 0.05f; // Было 0.7f + 0.3f
     }
-
-    // УБРАНО: Debug лог для comb processing
 
     // Обработка comb фильтров (параллельно)
     std::vector<float> combOutput(numSamples, 0.0f);
     
     for (size_t i = 0; i < combFiltersL.size(); ++i)
     {
-        // УБРАНО: Debug лог для каждого фильтра
-        
         std::vector<float> filterOutput(numSamples);
         processCombFilter(combInput.data(), filterOutput.data(), numSamples, combFiltersL[i]);
         
@@ -922,16 +935,12 @@ void ReverbEngine::processMono(const float* input, float* output, int numSamples
         }
     }
 
-    // УБРАНО: Debug лог для comb output
-
     // Нормализация comb выхода
     float combNormalizationFactor = 1.0f / static_cast<float>(combFiltersL.size());
     for (int i = 0; i < numSamples; ++i)
     {
         combOutput[i] *= combNormalizationFactor;
     }
-
-    // УБРАНО: Debug лог для normalized output
 
     // Обработка all-pass фильтров (последовательно)
     std::vector<float> allPassOutput = combOutput;
@@ -940,13 +949,15 @@ void ReverbEngine::processMono(const float* input, float* output, int numSamples
         processAllPassFilter(allPassOutput.data(), allPassOutput.data(), numSamples, filter);
     }
 
-    // Финальный выход
+    // ИСПРАВЛЕНО: Добавляем dry/wet микширование как в stereo версии
     for (int i = 0; i < numSamples; ++i)
     {
-        output[i] = allPassOutput[i];
+        float wetSignal = allPassOutput[i];
+        float drySignal = input[i];
+        
+        // Используем тот же алгоритм микширования что и в stereo
+        output[i] = wetSignal * wet1 + drySignal * dry;
     }
-
-    // УБРАНО: Final debug лог
 }
 
 void ReverbEngine::processCombFilter(const float* input, float* output, int numSamples, CombFilter& filter)

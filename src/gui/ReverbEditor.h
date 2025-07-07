@@ -28,12 +28,16 @@ private:
     juce::Slider dryWetSlider;
     juce::Slider stereoWidthSlider;
 
+    // Кнопка для переключения mono/stereo
+    juce::ToggleButton monoModeButton;
+
     // Attachments для связи с параметрами
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pitchShiftAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> roomSizeAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> decayTimeAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryWetAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> stereoWidthAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> monoModeAttachment;
 
     // Label для отображения версии
     juce::Label versionLabel;

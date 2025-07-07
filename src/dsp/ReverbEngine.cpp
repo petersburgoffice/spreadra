@@ -459,19 +459,21 @@ int ReverbEngine::gcd(int a, int b)
 
 float ReverbEngine::calculateFeedback(float decayTime, double sampleRate)
 {
-    // ИСПРАВЛЕНО: Правильная формула - feedback НЕ зависит от delayTime!
-    // В профессиональных reverb feedback одинаковый для всех comb фильтров
-    // при одинаковом decay time. delayTime влияет только на resonant frequencies.
+    // ИСПРАВЛЕНО: Используем простую реалистичную зависимость как в Freeverb/Airwindows
+    // Профессиональные reverb используют feedback в диапазоне 0.3-0.9
+    // Freeverb: roomsize = 0.84, Airwindows: feedback 0-0.7
     
-    // Используем базовую экспоненциальную формулу RT60:
-    // feedback = exp(-ln(1000) / (decayTime * sampleRate))
-    // где 1000 = 10^3 для затухания -60dB
+    // Используем гиперболический тангенс для плавной кривой:
+    // feedback = 0.3 + 0.6 * tanh(decayTime / 10.0)
+    // При decayTime = 0.1s → feedback ≈ 0.31
+    // При decayTime = 3.0s → feedback ≈ 0.48  
+    // При decayTime = 10s → feedback ≈ 0.76
+    // При decayTime = 20s → feedback ≈ 0.88
     
-    float decayTimeInSamples = decayTime * static_cast<float>(sampleRate);
-    float feedback = std::exp(-std::log(1000.0f) / decayTimeInSamples);
+    float feedback = 0.3f + 0.6f * std::tanh(decayTime / 10.0f);
     
     // Ограничиваем разумными пределами для стабильности
-    feedback = MathUtils::clamp(feedback, 0.001f, 0.999f);
+    feedback = MathUtils::clamp(feedback, 0.3f, 0.9f);
     
     return feedback;
 }

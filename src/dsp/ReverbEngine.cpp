@@ -90,7 +90,8 @@ void ReverbEngine::processStereo(const float* inputL, const float* inputR,
     std::vector<float> combInputL(numSamples);
     for (int i = 0; i < numSamples; ++i)
     {
-        combInputL[i] = tempBufferL[i] * 0.7f + earlyReflectionsBufferL[i] * 0.3f;
+        // ИСПРАВЛЕНО: Практически убираем early reflections для устранения delay эффекта
+        combInputL[i] = tempBufferL[i] * 0.95f + earlyReflectionsBufferL[i] * 0.05f; // Было 0.7f + 0.3f
     }
     
     // Левый канал: Parallel comb filters
@@ -143,7 +144,8 @@ void ReverbEngine::processStereo(const float* inputL, const float* inputR,
     std::vector<float> combInputR(numSamples);
     for (int i = 0; i < numSamples; ++i)
     {
-        combInputR[i] = tempBufferR[i] * 0.7f + earlyReflectionsBufferR[i] * 0.3f;
+        // ИСПРАВЛЕНО: Практически убираем early reflections для устранения delay эффекта
+        combInputR[i] = tempBufferR[i] * 0.95f + earlyReflectionsBufferR[i] * 0.05f; // Было 0.7f + 0.3f
     }
     
     // Правый канал: Parallel comb filters
@@ -354,9 +356,10 @@ std::vector<int> ReverbEngine::getScaledCombDelays(bool isRightChannel)
 
 std::vector<int> ReverbEngine::getScaledAllPassDelays(bool isRightChannel)
 {
-    // Классические времена задержек для all-pass фильтров
-    // Из статьи SynthEdit: 17ms и 74ms
-    std::vector<float> baseDelayTimesMs = {17.0f, 74.0f};
+    // ИСПРАВЛЕНО: Значительно уменьшенные времена задержек для устранения delay эффекта
+    // Было: 17ms и 74ms - слишком большие!
+    // Стало: 8ms и 15ms - намного меньше порога восприятия delay
+    std::vector<float> baseDelayTimesMs = {8.0f, 15.0f}; // Было {17.0f, 74.0f}
     
     float roomScale = calculateRoomScale(params.roomSize);
     
@@ -766,7 +769,7 @@ void ReverbEngine::updateDelayTimes()
 {
     // Базовые времена задержек
     std::vector<float> baseCombDelays = {50.0f, 53.0f, 61.0f, 68.0f, 72.0f, 78.0f}; // ms
-    std::vector<float> baseAllPassDelays = {17.0f, 74.0f}; // ms
+    std::vector<float> baseAllPassDelays = {8.0f, 15.0f}; // ms
     
     float roomScale = calculateRoomScale(params.roomSize);
     
@@ -896,7 +899,8 @@ void ReverbEngine::processMono(const float* input, float* output, int numSamples
     std::vector<float> combInput(numSamples);
     for (int i = 0; i < numSamples; ++i)
     {
-        combInput[i] = input[i] * 0.7f + earlyOutput[i] * 0.3f;
+        // ИСПРАВЛЕНО: Практически убираем early reflections для устранения delay эффекта
+        combInput[i] = input[i] * 0.95f + earlyOutput[i] * 0.05f; // Было 0.7f + 0.3f
     }
 
     // УБРАНО: Debug лог для comb processing

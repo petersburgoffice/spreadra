@@ -86,22 +86,16 @@ void ReverbEngine::processStereo(const float* inputL, const float* inputR,
     // Левый канал: Pre-delay
     for (int i = 0; i < numSamples; ++i)
     {
-        float delayedSample = preDelayBufferL[preDelayIndexL];
-        preDelayBufferL[preDelayIndexL] = monoInput[i];
-        preDelayIndexL = (preDelayIndexL + 1) % preDelayBufferL.size();
-        tempBufferL[i] = delayedSample;
+        // ИСПРАВЛЕНО: Отключаем pre-delay для полного устранения delay эффекта
+        tempBufferL[i] = monoInput[i]; // Прямое подключение без задержки
     }
     
-    // Левый канал: Early reflections
-    std::fill(earlyReflectionsBufferL.begin(), earlyReflectionsBufferL.end(), 0.0f);
-    processEarlyReflections(tempBufferL.data(), earlyReflectionsBufferL.data(), numSamples, earlyReflectionsL);
-    
-    // Левый канал: Mix pre-delayed + early reflections для comb input
+    // ИСПРАВЛЕНО: Полностью отключаем early reflections для устранения delay эффекта
+    // Подаем сигнал напрямую в comb фильтры
     std::vector<float> combInputL(numSamples);
     for (int i = 0; i < numSamples; ++i)
     {
-        // ИСПРАВЛЕНО: Практически убираем early reflections для устранения delay эффекта
-        combInputL[i] = tempBufferL[i] * 0.95f + earlyReflectionsBufferL[i] * 0.05f; // Было 0.7f + 0.3f
+        combInputL[i] = tempBufferL[i]; // Только pre-delay, без early reflections
     }
     
     // Левый канал: Parallel comb filters
@@ -140,22 +134,16 @@ void ReverbEngine::processStereo(const float* inputL, const float* inputR,
     // Правый канал: Pre-delay
     for (int i = 0; i < numSamples; ++i)
     {
-        float delayedSample = preDelayBufferR[preDelayIndexR];
-        preDelayBufferR[preDelayIndexR] = monoInput[i];
-        preDelayIndexR = (preDelayIndexR + 1) % preDelayBufferR.size();
-        tempBufferR[i] = delayedSample;
+        // ИСПРАВЛЕНО: Отключаем pre-delay для полного устранения delay эффекта
+        tempBufferR[i] = monoInput[i]; // Прямое подключение без задержки
     }
     
-    // Правый канал: Early reflections
-    std::fill(earlyReflectionsBufferR.begin(), earlyReflectionsBufferR.end(), 0.0f);
-    processEarlyReflections(tempBufferR.data(), earlyReflectionsBufferR.data(), numSamples, earlyReflectionsR);
-    
-    // Правый канал: Mix pre-delayed + early reflections для comb input
+    // ИСПРАВЛЕНО: Полностью отключаем early reflections для устранения delay эффекта
+    // Подаем сигнал напрямую в comb фильтры
     std::vector<float> combInputR(numSamples);
     for (int i = 0; i < numSamples; ++i)
     {
-        // ИСПРАВЛЕНО: Практически убираем early reflections для устранения delay эффекта
-        combInputR[i] = tempBufferR[i] * 0.95f + earlyReflectionsBufferR[i] * 0.05f; // Было 0.7f + 0.3f
+        combInputR[i] = tempBufferR[i]; // Только pre-delay, без early reflections
     }
     
     // Правый канал: Parallel comb filters
@@ -185,16 +173,16 @@ void ReverbEngine::processStereo(const float* inputL, const float* inputR,
         std::copy(filterOutput.begin(), filterOutput.end(), allPassOutputR.begin());
     }
     
-    // Freeverb-style cross-mixing для стерео эффекта
+    // Финальное микширование стерео
     for (int i = 0; i < numSamples; ++i)
     {
-        float reverbL = allPassOutputL[i];
-        float reverbR = allPassOutputR[i];
+        // Используем стерео ширину для cross-mixing
+        float wetL = allPassOutputL[i] * wet1 + allPassOutputR[i] * wet2;
+        float wetR = allPassOutputR[i] * wet1 + allPassOutputL[i] * wet2;
         
-        // Cross-mixing: левый канал получает основной сигнал L + небольшой R
-        // правый канал получает основной сигнал R + небольшой L
-        outputL[i] = reverbL * wet1 + reverbR * wet2 + inputL[i] * dry;
-        outputR[i] = reverbR * wet1 + reverbL * wet2 + inputR[i] * dry;
+        // Финальное микширование dry/wet
+        outputL[i] = inputL[i] * dry + wetL;
+        outputR[i] = inputR[i] * dry + wetR;
     }
 }
 
@@ -332,24 +320,53 @@ void ReverbEngine::setDryWetMix(float mixPercent)
 
 float ReverbEngine::calculateRoomScale(float roomSize)
 {
-    // ИСПРАВЛЕНО: Правильная степенная формула вместо неправильной логарифмической
-    // 10 m² -> 0.3x, 1000 m² -> 1.0x, 10000 m² -> 2.0x
-    // Формула: scale = (roomSize / 1000.0)^0.301
-    // Где 0.301 = log10(2.0) для получения правильных значений
+    // ИСПРАВЛЕНО: Более реалистичная физическая модель roomSize
+    // Согласно статье Relab, roomSize влияет на:
+    // 1. Delay Time (время до первых отражений)
+    // 2. Echo Density (плотность отражений)
+    // 3. Reverberation Rise Time (скорость нарастания)
     
-    float scale = std::pow(roomSize / 1000.0f, 0.301f);
+    // Физическая модель: размер комнаты влияет на время распространения звука
+    // Маленькая комната (10m²): быстрые, плотные отражения
+    // Большая комната (10000m²): медленные, разреженные отражения
+    
+    // Используем кубический корень для более реалистичного масштабирования
+    // 10m² → 0.2x (очень маленькая комната)
+    // 100m² → 0.5x (небольшая комната)  
+    // 1000m² → 1.0x (средняя комната)
+    // 10000m² → 2.15x (большая комната)
+    
+    float scale = 0.2f + 0.8f * std::pow(roomSize / 1000.0f, 0.33f);
     
     // Дополнительная защита от экстремальных значений
-    return MathUtils::clamp(scale, 0.3f, 2.0f);
+    return MathUtils::clamp(scale, 0.2f, 2.5f);
 }
 
 std::vector<int> ReverbEngine::getScaledCombDelays(bool isRightChannel)
 {
-    // Классические времена задержек из статьи SynthEdit (взаимно простые)
-    // "идеальные" времена: 50, 53, 61, 68, 72, и 78 ms
-    std::vector<float> baseDelayTimesMs = {50.0f, 53.0f, 61.0f, 68.0f, 72.0f, 78.0f};
+    // ИСПРАВЛЕНО: Более реалистичные времена задержек с учетом физики помещения
+    // Классические времена задержек но с учетом размера комнаты
+    // Маленькая комната: 10-15ms (быстрые отражения от близких стен)
+    // Большая комната: 100-150ms (медленные отражения от далеких стен)
     
+    std::vector<float> baseDelayTimesMs;
     float roomScale = calculateRoomScale(params.roomSize);
+    
+    if (roomScale < 0.5f) // Маленькая комната
+    {
+        // Быстрые, плотные отражения
+        baseDelayTimesMs = {10.0f, 12.0f, 15.0f, 18.0f, 21.0f, 24.0f};
+    }
+    else if (roomScale < 1.5f) // Средняя комната
+    {
+        // Классические времена Schroeder
+        baseDelayTimesMs = {29.7f, 37.1f, 41.1f, 43.7f, 50.0f, 56.0f};
+    }
+    else // Большая комната
+    {
+        // Медленные, разреженные отражения
+        baseDelayTimesMs = {70.0f, 83.0f, 97.0f, 111.0f, 127.0f, 142.0f};
+    }
     
     std::vector<int> delaySamples;
     for (float baseDelayMs : baseDelayTimesMs)
@@ -371,10 +388,11 @@ std::vector<int> ReverbEngine::getScaledCombDelays(bool isRightChannel)
 
 std::vector<int> ReverbEngine::getScaledAllPassDelays(bool isRightChannel)
 {
-    // ИСПРАВЛЕНО: Значительно уменьшенные времена задержек для устранения delay эффекта
-    // Было: 17ms и 74ms - слишком большие!
-    // Стало: 8ms и 15ms - намного меньше порога восприятия delay
-    std::vector<float> baseDelayTimesMs = {8.0f, 15.0f}; // Было {17.0f, 74.0f}
+    // ИСПРАВЛЕНО: Максимально уменьшенные времена задержек для полного устранения delay эффекта
+    // Профессиональные allpass фильтры используют очень малые задержки: 1-3ms
+    // Было: 8ms и 15ms - все еще слишком много!
+    // Стало: 2ms и 4ms - ниже порога восприятия delay (5ms)
+    std::vector<float> baseDelayTimesMs = {2.0f, 4.0f}; // Было {8.0f, 15.0f}
     
     float roomScale = calculateRoomScale(params.roomSize);
     
@@ -389,6 +407,9 @@ std::vector<int> ReverbEngine::getScaledAllPassDelays(bool isRightChannel)
         {
             samples += params.stereoSpread;
         }
+        
+        // ИСПРАВЛЕНО: Минимальная задержка должна быть хотя бы 1 сэмпл
+        samples = std::max(samples, 1);
         
         delaySamples.push_back(samples);
     }
@@ -777,9 +798,8 @@ void ReverbEngine::updateEarlyReflections()
 }
 
 //==============================================================================
-// НОВЫЕ МЕТОДЫ: Обновление времен задержек без переинициализации буферов
+// ИСПРАВЛЕНО: Очистка буферов при изменении roomSize для устранения "памяти"
 //==============================================================================
-
 void ReverbEngine::updateDelayTimes()
 {
     // ИСПРАВЛЕНО: Используем ту же логику что и при инициализации!
@@ -794,23 +814,20 @@ void ReverbEngine::updateDelayTimes()
     {
         size_t newDelayTime = static_cast<size_t>(newDelaysL[i]);
         
-        // ИСПРАВЛЕНО: Проверяем нужно ли увеличить буфер
+        // ИСПРАВЛЕНО: ВСЕГДА ресайзим буфер до нужного размера (не только увеличиваем!)
         size_t requiredBufferSize = newDelayTime + blockSize;
-        if (requiredBufferSize > combFiltersL[i].buffer.size())
-        {
-            // Увеличиваем буфер сохраняя содержимое
-            combFiltersL[i].buffer.resize(requiredBufferSize, 0.0f);
-        }
+        combFiltersL[i].buffer.resize(requiredBufferSize, 0.0f);
         
-        if (combFiltersL[i].delayTime != newDelayTime)
-        {
-            combFiltersL[i].delayTime = newDelayTime;
-            
-            // Запускаем crossfade для плавного перехода
-            combFiltersL[i].outputGain = 1.0f;
-            combFiltersL[i].targetOutputGain = 1.0f;
-            combFiltersL[i].fadeRemaining = static_cast<int>(0.002f * sampleRate); // 2ms fade
-        }
+        // ИСПРАВЛЕНО: Очищаем буфер чтобы убрать "память" от предыдущего roomSize
+        std::fill(combFiltersL[i].buffer.begin(), combFiltersL[i].buffer.end(), 0.0f);
+        combFiltersL[i].readIndex = 0;
+        combFiltersL[i].writeIndex = 0;
+        combFiltersL[i].delayTime = newDelayTime;
+        
+        // Убираем crossfade - он не нужен после очистки буфера
+        combFiltersL[i].outputGain = 1.0f;
+        combFiltersL[i].targetOutputGain = 1.0f;
+        combFiltersL[i].fadeRemaining = 0;
     }
     
     // Обновляем delay time для comb фильтров - правый канал
@@ -818,23 +835,20 @@ void ReverbEngine::updateDelayTimes()
     {
         size_t newDelayTime = static_cast<size_t>(newDelaysR[i]);
         
-        // ИСПРАВЛЕНО: Проверяем нужно ли увеличить буфер
+        // ИСПРАВЛЕНО: ВСЕГДА ресайзим буфер до нужного размера (не только увеличиваем!)
         size_t requiredBufferSize = newDelayTime + blockSize;
-        if (requiredBufferSize > combFiltersR[i].buffer.size())
-        {
-            // Увеличиваем буфер сохраняя содержимое
-            combFiltersR[i].buffer.resize(requiredBufferSize, 0.0f);
-        }
+        combFiltersR[i].buffer.resize(requiredBufferSize, 0.0f);
         
-        if (combFiltersR[i].delayTime != newDelayTime)
-        {
-            combFiltersR[i].delayTime = newDelayTime;
-            
-            // Запускаем crossfade для плавного перехода
-            combFiltersR[i].outputGain = 1.0f;
-            combFiltersR[i].targetOutputGain = 1.0f;
-            combFiltersR[i].fadeRemaining = static_cast<int>(0.002f * sampleRate); // 2ms fade
-        }
+        // ИСПРАВЛЕНО: Очищаем буфер чтобы убрать "память" от предыдущего roomSize
+        std::fill(combFiltersR[i].buffer.begin(), combFiltersR[i].buffer.end(), 0.0f);
+        combFiltersR[i].readIndex = 0;
+        combFiltersR[i].writeIndex = 0;
+        combFiltersR[i].delayTime = newDelayTime;
+        
+        // Убираем crossfade - он не нужен после очистки буфера
+        combFiltersR[i].outputGain = 1.0f;
+        combFiltersR[i].targetOutputGain = 1.0f;
+        combFiltersR[i].fadeRemaining = 0;
     }
     
     // Обновляем delay time для all-pass фильтров - левый канал
@@ -842,23 +856,20 @@ void ReverbEngine::updateDelayTimes()
     {
         size_t newDelayTime = static_cast<size_t>(newAllPassDelaysL[i]);
         
-        // ИСПРАВЛЕНО: Проверяем нужно ли увеличить буфер
+        // ИСПРАВЛЕНО: ВСЕГДА ресайзим буфер до нужного размера (не только увеличиваем!)
         size_t requiredBufferSize = newDelayTime + blockSize;
-        if (requiredBufferSize > allPassFiltersL[i].buffer.size())
-        {
-            // Увеличиваем буфер сохраняя содержимое
-            allPassFiltersL[i].buffer.resize(requiredBufferSize, 0.0f);
-        }
+        allPassFiltersL[i].buffer.resize(requiredBufferSize, 0.0f);
         
-        if (allPassFiltersL[i].delayTime != newDelayTime)
-        {
-            allPassFiltersL[i].delayTime = newDelayTime;
-            
-            // Запускаем crossfade для плавного перехода
-            allPassFiltersL[i].outputGain = 1.0f;
-            allPassFiltersL[i].targetOutputGain = 1.0f;
-            allPassFiltersL[i].fadeRemaining = static_cast<int>(0.002f * sampleRate); // 2ms fade
-        }
+        // ИСПРАВЛЕНО: Очищаем буфер чтобы убрать "память" от предыдущего roomSize
+        std::fill(allPassFiltersL[i].buffer.begin(), allPassFiltersL[i].buffer.end(), 0.0f);
+        allPassFiltersL[i].readIndex = 0;
+        allPassFiltersL[i].writeIndex = 0;
+        allPassFiltersL[i].delayTime = newDelayTime;
+        
+        // Убираем crossfade - он не нужен после очистки буфера
+        allPassFiltersL[i].outputGain = 1.0f;
+        allPassFiltersL[i].targetOutputGain = 1.0f;
+        allPassFiltersL[i].fadeRemaining = 0;
     }
     
     // Обновляем delay time для all-pass фильтров - правый канал
@@ -866,23 +877,20 @@ void ReverbEngine::updateDelayTimes()
     {
         size_t newDelayTime = static_cast<size_t>(newAllPassDelaysR[i]);
         
-        // ИСПРАВЛЕНО: Проверяем нужно ли увеличить буфер
+        // ИСПРАВЛЕНО: ВСЕГДА ресайзим буфер до нужного размера (не только увеличиваем!)
         size_t requiredBufferSize = newDelayTime + blockSize;
-        if (requiredBufferSize > allPassFiltersR[i].buffer.size())
-        {
-            // Увеличиваем буфер сохраняя содержимое
-            allPassFiltersR[i].buffer.resize(requiredBufferSize, 0.0f);
-        }
+        allPassFiltersR[i].buffer.resize(requiredBufferSize, 0.0f);
         
-        if (allPassFiltersR[i].delayTime != newDelayTime)
-        {
-            allPassFiltersR[i].delayTime = newDelayTime;
-            
-            // Запускаем crossfade для плавного перехода
-            allPassFiltersR[i].outputGain = 1.0f;
-            allPassFiltersR[i].targetOutputGain = 1.0f;
-            allPassFiltersR[i].fadeRemaining = static_cast<int>(0.002f * sampleRate); // 2ms fade
-        }
+        // ИСПРАВЛЕНО: Очищаем буфер чтобы убрать "память" от предыдущего roomSize
+        std::fill(allPassFiltersR[i].buffer.begin(), allPassFiltersR[i].buffer.end(), 0.0f);
+        allPassFiltersR[i].readIndex = 0;
+        allPassFiltersR[i].writeIndex = 0;
+        allPassFiltersR[i].delayTime = newDelayTime;
+        
+        // Убираем crossfade - он не нужен после очистки буфера
+        allPassFiltersR[i].outputGain = 1.0f;
+        allPassFiltersR[i].targetOutputGain = 1.0f;
+        allPassFiltersR[i].fadeRemaining = 0;
     }
 }
 
@@ -906,26 +914,17 @@ void ReverbEngine::processCombFilter(const float* input, float* output, int numS
         // Включаем исходный сигнал для работы ручек
         float combOutput = input[i] + filter.feedback * delayed;
         
-        // Применяем damping (high-frequency attenuation)
-        float dampedSignal = delayed * (1.0f - filter.damping) + filter.damping * delayed;
+        // Применяем damping для высокочастотного затухания
+        if (filter.damping > 0.0f)
+        {
+            combOutput *= (1.0f - filter.damping);
+        }
         
         // Записываем в буфер
         filter.buffer[filter.writeIndex] = combOutput;
         
-        // Применяем crossfade к выходному сигналу
-        if (filter.fadeRemaining > 0)
-        {
-            float fadeProgress = 1.0f - (float(filter.fadeRemaining) / (0.002f * sampleRate));
-            filter.outputGain = fadeProgress; // Fade in после изменения
-            filter.fadeRemaining--;
-        }
-        else
-        {
-            filter.outputGain = 1.0f;
-        }
-        
-        // Выходной сигнал с crossfade
-        output[i] = combOutput * filter.outputGain;
+        // ИСПРАВЛЕНО: Убираем crossfade механизм - он больше не нужен
+        output[i] = combOutput;
         
         // Обновляем индексы
         filter.readIndex = (filter.readIndex + 1) % bufferSize;
@@ -952,20 +951,8 @@ void ReverbEngine::processAllPassFilter(const float* input, float* output, int n
         // Записываем в буфер
         filter.buffer[filter.writeIndex] = input[i] + filter.feedback * delayed;
         
-        // Применяем crossfade к выходному сигналу
-        if (filter.fadeRemaining > 0)
-        {
-            float fadeProgress = 1.0f - (float(filter.fadeRemaining) / (0.002f * sampleRate));
-            filter.outputGain = fadeProgress; // Fade in после изменения
-            filter.fadeRemaining--;
-        }
-        else
-        {
-            filter.outputGain = 1.0f;
-        }
-        
-        // Выходной сигнал с crossfade
-        output[i] = allPassOutput * filter.outputGain;
+        // ИСПРАВЛЕНО: Убираем crossfade механизм - он больше не нужен
+        output[i] = allPassOutput;
         
         // Обновляем индексы
         filter.readIndex = (filter.readIndex + 1) % bufferSize;

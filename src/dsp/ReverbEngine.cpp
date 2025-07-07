@@ -457,20 +457,18 @@ int ReverbEngine::gcd(int a, int b)
     return a;
 }
 
-float ReverbEngine::calculateFeedback(float decayTime, int delayTime, double sampleRate)
+float ReverbEngine::calculateFeedback(float decayTime, double sampleRate)
 {
-    // ПРАВИЛЬНАЯ RT60 ФОРМУЛА из FAUST/Stanford/CCRMA
-    // Эта формула обеспечивает точное затухание -60dB за decayTime секунд
+    // ИСПРАВЛЕНО: Правильная формула - feedback НЕ зависит от delayTime!
+    // В профессиональных reverb feedback одинаковый для всех comb фильтров
+    // при одинаковом decay time. delayTime влияет только на resonant frequencies.
     
-    // Время задержки фильтра в миллисекундах
-    float delayTimeMs = (static_cast<float>(delayTime) / static_cast<float>(sampleRate)) * 1000.0f;
+    // Используем базовую экспоненциальную формулу RT60:
+    // feedback = exp(-ln(1000) / (decayTime * sampleRate))
+    // где 1000 = 10^3 для затухания -60dB
     
-    // RT60 формула: feedback = 0.001^(delayTime / RT60)
-    // 0.001 = 10^(-3) = -60dB
-    float feedback = std::pow(0.001f, delayTimeMs / (decayTime * 1000.0f));
-    
-    // Альтернативная запись той же формулы:
-    // feedback = std::pow(10.0f, -3.0f * delayTimeMs / (decayTime * 1000.0f));
+    float decayTimeInSamples = decayTime * static_cast<float>(sampleRate);
+    float feedback = std::exp(-std::log(1000.0f) / decayTimeInSamples);
     
     // Ограничиваем разумными пределами для стабильности
     feedback = MathUtils::clamp(feedback, 0.001f, 0.999f);
@@ -542,7 +540,7 @@ void ReverbEngine::initializeCombFilters()
         filter.writeIndex = 0;
         
         // Рассчитываем feedback на основе decay time
-        filter.feedback = calculateFeedback(params.decayTime, delayTime, sampleRate);
+        filter.feedback = calculateFeedback(params.decayTime, sampleRate);
         
         // Damping коэффициент
         filter.damping = params.damping / 100.0f;
@@ -572,7 +570,7 @@ void ReverbEngine::initializeCombFilters()
         filter.writeIndex = 0;
         
         // Рассчитываем feedback на основе decay time
-        filter.feedback = calculateFeedback(params.decayTime, delayTime, sampleRate);
+        filter.feedback = calculateFeedback(params.decayTime, sampleRate);
         
         // Damping коэффициент
         filter.damping = params.damping / 100.0f;
@@ -698,10 +696,10 @@ void ReverbEngine::updateFilterParameters()
     // Обновляем параметры comb фильтров
     for (auto& filter : combFiltersL)
     {
-        filter.feedback = calculateFeedback(params.decayTime, filter.delayTime, sampleRate);
+        filter.feedback = calculateFeedback(params.decayTime, sampleRate);
         
         // ИСПРАВЛЕНО: Damping должен быть очень маленьким (1-5%), не 50%!
-        // В профессиональных реверберах damping - это слабое ослабление высоких частот
+        // В профессиональных reverb damping - это слабое ослабление высоких частот
         // params.damping диапазон 0-100%, но используем только 0-5% для реального damping
         float dampingNormalized = MathUtils::clamp(params.damping / 100.0f, 0.0f, 1.0f);
         filter.damping = dampingNormalized * 0.05f; // Максимум 5% damping, не 100%!
@@ -709,10 +707,10 @@ void ReverbEngine::updateFilterParameters()
     
     for (auto& filter : combFiltersR)
     {
-        filter.feedback = calculateFeedback(params.decayTime, filter.delayTime, sampleRate);
+        filter.feedback = calculateFeedback(params.decayTime, sampleRate);
         
         // ИСПРАВЛЕНО: Damping должен быть очень маленьким (1-5%), не 50%!
-        // В профессиональных реверберах damping - это слабое ослабление высоких частот
+        // В профессиональных reverb damping - это слабое ослабление высоких частот
         // params.damping диапазон 0-100%, но используем только 0-5% для реального damping
         float dampingNormalized = MathUtils::clamp(params.damping / 100.0f, 0.0f, 1.0f);
         filter.damping = dampingNormalized * 0.05f; // Максимум 5% damping, не 100%!

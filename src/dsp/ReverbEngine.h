@@ -164,7 +164,7 @@ private:
     // Математические утилиты
     static bool areMutuallyPrime(const std::vector<int>& delays);
     static int gcd(int a, int b);
-    static float calculateFeedback(float decayTime, int delayTime, double sampleRate);
+    static float calculateFeedback(float decayTime, double sampleRate);
     static float calculateRoomScale(float roomSize);
 
     void processCombFilter(const float* input, float* output, int numSamples, CombFilter& filter);

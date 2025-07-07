@@ -1,7 +1,6 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
-#include "DelayEngine.h"
 #include "PitchShifter.h"
 #include "ReverbEngine.h"
 #include "FilterBank.h"
@@ -37,11 +36,6 @@ public:
     // Параметры алгоритма
     struct Parameters
     {
-        // Delay parameters
-        float delayTime = 500.0f;      // ms, 10-2000
-        float feedback = 50.0f;        // %, 0-95 (ограничено для стабильности)
-        float diffusion = 50.0f;       // %, 0-100
-        
         // Pitch shift parameters
         float pitchShift = 12.0f;      // semitones, -24 to +24
         float formantPreservation = 80.0f; // %, 0-100
@@ -70,8 +64,6 @@ public:
 
     //==============================================================================
     // Индивидуальные параметры
-    void setDelayTime(float delayTimeMs);
-    void setFeedback(float feedbackPercent);
     void setPitchShift(float semitones);
     void setRoomSize(float roomSizeM2);
     void setDecayTime(float decayTimeSeconds);
@@ -80,7 +72,6 @@ public:
 
     //==============================================================================
     // DSP компоненты
-    DelayEngine& getDelayEngine() { return delayEngine; }
     PitchShifter& getPitchShifter() { return pitchShifter; }
     ReverbEngine& getReverbEngine() { return reverbEngine; }
     FilterBank& getFilterBank() { return filterBank; }
@@ -94,7 +85,6 @@ public:
 private:
     //==============================================================================
     // DSP компоненты
-    DelayEngine delayEngine;
     PitchShifter pitchShifter;
     ReverbEngine reverbEngine;
     FilterBank filterBank;

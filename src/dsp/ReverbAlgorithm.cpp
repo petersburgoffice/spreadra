@@ -6,8 +6,6 @@
 ReverbAlgorithm::ReverbAlgorithm()
 {
     // Инициализация параметров по умолчанию
-    params.delayTime = 500.0f;
-    params.feedback = 50.0f;
     params.pitchShift = 12.0f;
     params.roomSize = 1000.0f;
     params.decayTime = 3.0f;
@@ -25,7 +23,6 @@ void ReverbAlgorithm::prepare(double sampleRate, int blockSize)
     this->blockSize = blockSize;
     
     // Подготовка DSP компонентов
-    delayEngine.prepare(sampleRate, blockSize);
     pitchShifter.prepare(sampleRate, blockSize);
     reverbEngine.prepare(sampleRate, blockSize);
     filterBank.prepare(sampleRate, blockSize);
@@ -45,7 +42,6 @@ void ReverbAlgorithm::prepare(double sampleRate, int blockSize)
 
 void ReverbAlgorithm::reset()
 {
-    delayEngine.reset();
     pitchShifter.reset();
     reverbEngine.reset();
     filterBank.reset();
@@ -93,17 +89,7 @@ void ReverbAlgorithm::setParameters(const Parameters& newParams)
     updateDSPParameters();
 }
 
-void ReverbAlgorithm::setDelayTime(float delayTimeMs)
-{
-    params.delayTime = MathUtils::clamp(delayTimeMs, 10.0f, 2000.0f);
-    delayEngine.setDelayTime(params.delayTime);
-}
 
-void ReverbAlgorithm::setFeedback(float feedbackPercent)
-{
-    params.feedback = MathUtils::clamp(feedbackPercent, 0.0f, 95.0f);
-    delayEngine.setFeedback(params.feedback);
-}
 
 void ReverbAlgorithm::setPitchShift(float semitones)
 {
@@ -138,22 +124,20 @@ void ReverbAlgorithm::setStereoWidth(float stereoWidthPercent)
 float ReverbAlgorithm::getCpuUsage() const
 {
     // Простая оценка CPU usage на основе сложности алгоритмов
-    float delayUsage = 0.1f;
     float pitchUsage = 0.3f;
     float reverbUsage = 0.4f;
     float filterUsage = 0.05f;
     
-    return delayUsage + pitchUsage + reverbUsage + filterUsage;
+    return pitchUsage + reverbUsage + filterUsage;
 }
 
 float ReverbAlgorithm::getLatency() const
 {
     // Расчет общей задержки
-    float delayLatency = params.delayTime;
     float pitchLatency = 50.0f; // Примерная задержка pitch shifter
     float reverbLatency = 10.0f; // Минимальная задержка реверберации
     
-    return delayLatency + pitchLatency + reverbLatency;
+    return pitchLatency + reverbLatency;
 }
 
 void ReverbAlgorithm::getSpectrum(float* spectrum, int numBins)
@@ -167,13 +151,6 @@ void ReverbAlgorithm::updateDSPParameters()
 {
     if (!isPrepared)
         return;
-    
-    // Обновление параметров delay engine
-    DelayEngine::Parameters delayParams;
-    delayParams.delayTime = params.delayTime;
-    delayParams.feedback = params.feedback;
-    delayParams.diffusion = params.diffusion;
-    delayEngine.setParameters(delayParams);
     
     // Обновление параметров pitch shifter
     PitchShifter::Parameters pitchParams;

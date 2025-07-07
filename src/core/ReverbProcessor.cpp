@@ -170,17 +170,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReverbProcessor::createParam
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
-    // Delay parameters
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "delayTime", "Delay Time", juce::NormalisableRange<float>(10.0f, 2000.0f, 1.0f), 500.0f,
-        juce::String(), juce::AudioProcessorParameter::genericParameter,
-        [](float value, int) { return juce::String(value, 0) + " ms"; }));
-    
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "feedback", "Feedback", juce::NormalisableRange<float>(0.0f, 150.0f, 1.0f), 120.0f,
-        juce::String(), juce::AudioProcessorParameter::genericParameter,
-        [](float value, int) { return juce::String(value, 0) + "%"; }));
-    
     // Pitch parameters
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         "pitchShift", "Pitch Shift", juce::NormalisableRange<float>(-24.0f, 24.0f, 0.1f), 12.0f,
@@ -216,17 +205,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReverbProcessor::createParam
 void ReverbProcessor::updateParameters()
 {
     // Получение параметров из AudioProcessorValueTreeState
-    float delayTime = parameters.getRawParameterValue("delayTime")->load();
-    float feedback = parameters.getRawParameterValue("feedback")->load();
     float pitchShift = parameters.getRawParameterValue("pitchShift")->load();
     float roomSize = parameters.getRawParameterValue("roomSize")->load();
     float decayTime = parameters.getRawParameterValue("decayTime")->load();
     float dryWet = parameters.getRawParameterValue("dryWet")->load();
     float stereoWidth = parameters.getRawParameterValue("stereoWidth")->load();
     
-    // Обновление параметров shimmer-ядра
-    reverbAlgorithm.setDelayTime(delayTime);
-    reverbAlgorithm.setFeedback(feedback);
+    // Обновление параметров reverb-ядра
     reverbAlgorithm.setPitchShift(pitchShift);
     reverbAlgorithm.setRoomSize(roomSize);
     reverbAlgorithm.setDecayTime(decayTime);

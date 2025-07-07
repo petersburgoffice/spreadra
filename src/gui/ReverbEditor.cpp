@@ -7,8 +7,6 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     setSize(600, 520);
     
     // Создание слайдеров для параметров
-    addAndMakeVisible(delayTimeSlider);
-    addAndMakeVisible(feedbackSlider);
     addAndMakeVisible(pitchShiftSlider);
     addAndMakeVisible(roomSizeSlider);
     addAndMakeVisible(decayTimeSlider);
@@ -16,16 +14,6 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     addAndMakeVisible(stereoWidthSlider);
     
     // Настройка слайдеров
-    delayTimeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    delayTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    delayTimeSlider.setRange(10.0, 2000.0, 1.0);
-    delayTimeSlider.setValue(500.0);
-    
-    feedbackSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    feedbackSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    feedbackSlider.setRange(0.0, 150.0, 1.0);
-    feedbackSlider.setValue(120.0);
-    
     pitchShiftSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     pitchShiftSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
     pitchShiftSlider.setRange(-24.0, 24.0, 0.1);
@@ -52,10 +40,6 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     stereoWidthSlider.setValue(100.0);
     
     // Подключение к параметрам процессора
-    delayTimeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        processor.getValueTreeState(), "delayTime", delayTimeSlider);
-    feedbackAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        processor.getValueTreeState(), "feedback", feedbackSlider);
     pitchShiftAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         processor.getValueTreeState(), "pitchShift", pitchShiftSlider);
     roomSizeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -87,8 +71,6 @@ void ReverbEditor::paint(juce::Graphics& g)
     
     // Заголовки для слайдеров
     g.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
-    g.drawText("Delay Time", delayTimeSlider.getBounds().translated(0, -25), juce::Justification::centred);
-    g.drawText("Feedback", feedbackSlider.getBounds().translated(0, -25), juce::Justification::centred);
     g.drawText("Pitch Shift", pitchShiftSlider.getBounds().translated(0, -25), juce::Justification::centred);
     g.drawText("Room Size", roomSizeSlider.getBounds().translated(0, -25), juce::Justification::centred);
     g.drawText("Decay Time", decayTimeSlider.getBounds().translated(0, -25), juce::Justification::centred);
@@ -111,25 +93,19 @@ void ReverbEditor::resized()
     auto bottomRow = bounds.removeFromTop(sliderHeight);
     
     // Первый ряд
-    delayTimeSlider.setBounds(topRow.removeFromLeft(sliderWidth));
-    topRow.removeFromLeft(spacing);
-    
-    feedbackSlider.setBounds(topRow.removeFromLeft(sliderWidth));
-    topRow.removeFromLeft(spacing);
-    
     pitchShiftSlider.setBounds(topRow.removeFromLeft(sliderWidth));
+    topRow.removeFromLeft(spacing);
+    
+    roomSizeSlider.setBounds(topRow.removeFromLeft(sliderWidth));
+    topRow.removeFromLeft(spacing);
+    
+    decayTimeSlider.setBounds(topRow.removeFromLeft(sliderWidth));
     
     // Второй ряд
-    roomSizeSlider.setBounds(middleRow.removeFromLeft(sliderWidth));
-    middleRow.removeFromLeft(spacing);
-    
-    decayTimeSlider.setBounds(middleRow.removeFromLeft(sliderWidth));
-    middleRow.removeFromLeft(spacing);
-    
     dryWetSlider.setBounds(middleRow.removeFromLeft(sliderWidth));
+    middleRow.removeFromLeft(spacing);
     
-    // Третий ряд
-    stereoWidthSlider.setBounds(bottomRow.removeFromLeft(sliderWidth));
+    stereoWidthSlider.setBounds(middleRow.removeFromLeft(sliderWidth));
     
     // Размещение версии в правом нижнем углу
     versionLabel.setBounds(getWidth() - 80, getHeight() - 25, 70, 20);

@@ -15,19 +15,7 @@ add_subdirectory(../Common ${CMAKE_BINARY_DIR}/Common)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(FFTW3 REQUIRED IMPORTED_TARGET fftw3)
 
-# Автоматическое увеличение версии при каждой сборке
-execute_process(
-    COMMAND ${CMAKE_SOURCE_DIR}/increment_version.sh
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE VERSION_OUTPUT
-    RESULT_VARIABLE VERSION_RESULT
-)
-
-if(VERSION_RESULT EQUAL 0)
-    message(STATUS "Version auto-incremented: ${VERSION_OUTPUT}")
-endif()
-
-# Читаем версию из файла
+# Читаем версию из файла (версия управляется через Makefile)
 file(STRINGS ${CMAKE_SOURCE_DIR}/version.txt VERSION_STRING)
 string(REPLACE "." ";" VERSION_LIST ${VERSION_STRING})
 list(GET VERSION_LIST 0 VERSION_MAJOR)
@@ -35,6 +23,13 @@ list(GET VERSION_LIST 1 VERSION_MINOR)
 list(GET VERSION_LIST 2 VERSION_BUILD)
 
 message(STATUS "Version configured: ${VERSION_STRING}")
+
+# Генерируем Version.h из шаблона
+configure_file(
+    ${CMAKE_SOURCE_DIR}/src/core/Version.h.in
+    ${CMAKE_SOURCE_DIR}/src/core/Version.h
+    @ONLY
+)
 
 # Собираем список всех исходников из src/ (без utils - используем Common)
 file(GLOB_RECURSE SHIMMER_SOURCES

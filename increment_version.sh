@@ -22,16 +22,4 @@ NEW_VERSION="$MAJOR.$MINOR.$BUILD"
 # Записываем обратно в файл
 echo "$NEW_VERSION" > version.txt
 
-echo "Version updated: $VERSION -> $NEW_VERSION"
-
-# Генерируем header файл с версией для использования в коде
-cat > src/core/Version.h << EOF
-#pragma once
-
-#define PLUGIN_VERSION_STRING "$NEW_VERSION"
-#define PLUGIN_VERSION_MAJOR $MAJOR
-#define PLUGIN_VERSION_MINOR $MINOR  
-#define PLUGIN_VERSION_BUILD $BUILD
-EOF
-
-echo "Generated src/core/Version.h" 
+echo "Version updated: $VERSION -> $NEW_VERSION" 

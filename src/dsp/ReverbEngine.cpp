@@ -82,11 +82,22 @@ void ReverbEngine::processStereo(const float* inputL, const float* inputR,
         tempBufferL[i] = delayedSample;
     }
     
+    // Левый канал: Early reflections
+    std::fill(earlyReflectionsBufferL.begin(), earlyReflectionsBufferL.end(), 0.0f);
+    processEarlyReflections(tempBufferL.data(), earlyReflectionsBufferL.data(), numSamples, earlyReflectionsL);
+    
+    // Левый канал: Mix pre-delayed + early reflections для comb input
+    std::vector<float> combInputL(numSamples);
+    for (int i = 0; i < numSamples; ++i)
+    {
+        combInputL[i] = tempBufferL[i] * 0.7f + earlyReflectionsBufferL[i] * 0.3f;
+    }
+    
     // Левый канал: Parallel comb filters
     for (size_t filterIndex = 0; filterIndex < combFiltersL.size(); ++filterIndex)
     {
         std::vector<float> filterOutput(numSamples);
-        processCombFilter(tempBufferL.data(), filterOutput.data(), numSamples, combFiltersL[filterIndex]);
+        processCombFilter(combInputL.data(), filterOutput.data(), numSamples, combFiltersL[filterIndex]);
         
         for (int i = 0; i < numSamples; ++i)
         {
@@ -124,11 +135,22 @@ void ReverbEngine::processStereo(const float* inputL, const float* inputR,
         tempBufferR[i] = delayedSample;
     }
     
+    // Правый канал: Early reflections
+    std::fill(earlyReflectionsBufferR.begin(), earlyReflectionsBufferR.end(), 0.0f);
+    processEarlyReflections(tempBufferR.data(), earlyReflectionsBufferR.data(), numSamples, earlyReflectionsR);
+    
+    // Правый канал: Mix pre-delayed + early reflections для comb input
+    std::vector<float> combInputR(numSamples);
+    for (int i = 0; i < numSamples; ++i)
+    {
+        combInputR[i] = tempBufferR[i] * 0.7f + earlyReflectionsBufferR[i] * 0.3f;
+    }
+    
     // Правый канал: Parallel comb filters
     for (size_t filterIndex = 0; filterIndex < combFiltersR.size(); ++filterIndex)
     {
         std::vector<float> filterOutput(numSamples);
-        processCombFilter(tempBufferR.data(), filterOutput.data(), numSamples, combFiltersR[filterIndex]);
+        processCombFilter(combInputR.data(), filterOutput.data(), numSamples, combFiltersR[filterIndex]);
         
         for (int i = 0; i < numSamples; ++i)
         {

@@ -332,10 +332,15 @@ void ReverbEngine::setDryWetMix(float mixPercent)
 
 float ReverbEngine::calculateRoomScale(float roomSize)
 {
-    // Логарифмическое масштабирование для более естественного звучания
+    // ИСПРАВЛЕНО: Правильная степенная формула вместо неправильной логарифмической
     // 10 m² -> 0.3x, 1000 m² -> 1.0x, 10000 m² -> 2.0x
-    float logScale = std::log10(roomSize / 100.0f); // 100 m² = базовый размер
-    return MathUtils::clamp(0.3f + logScale * 0.5f, 0.3f, 2.0f);
+    // Формула: scale = (roomSize / 1000.0)^0.301
+    // Где 0.301 = log10(2.0) для получения правильных значений
+    
+    float scale = std::pow(roomSize / 1000.0f, 0.301f);
+    
+    // Дополнительная защита от экстремальных значений
+    return MathUtils::clamp(scale, 0.3f, 2.0f);
 }
 
 std::vector<int> ReverbEngine::getScaledCombDelays(bool isRightChannel)

@@ -380,18 +380,21 @@ std::vector<int> ReverbEngine::getScaledAllPassDelays(bool isRightChannel)
 
 std::vector<float> ReverbEngine::getEarlyReflectionDelays(bool isRightChannel)
 {
-    // ИСПРАВЛЕНО: Увеличенные времена задержек для устранения delay эффекта
-    // Профессиональные early reflections: 5-30ms для естественного звучания
+    // ИСПРАВЛЕНО: Создаем более плотную структуру отражений для устранения delay эффекта
+    // Профессиональные early reflections: плотная структура 3-25ms
     float roomScale = calculateRoomScale(params.roomSize);
-    float baseDelay = 5.0f + 15.0f * roomScale; // 5-35ms базовая задержка (было 2-18ms)
+    float baseDelay = 3.0f + 12.0f * roomScale; // 3-15ms базовая задержка (было 5-35ms)
     
     std::vector<float> delays;
-    delays.push_back(baseDelay);           // 1-е отражение: 5-35ms
-    delays.push_back(baseDelay * 1.3f);    // 2-е отражение
-    delays.push_back(baseDelay * 1.7f);    // 3-е отражение
-    delays.push_back(baseDelay * 2.1f);    // 4-е отражение
-    delays.push_back(baseDelay * 2.7f);    // 5-е отражение
-    delays.push_back(baseDelay * 3.3f);    // 6-е отражение
+    // Создаем 8 отражений с малыми промежутками для более плотной структуры
+    delays.push_back(baseDelay);           // 1-е отражение: 3-15ms
+    delays.push_back(baseDelay * 1.15f);   // 2-е отражение: +15% (малый промежуток)
+    delays.push_back(baseDelay * 1.35f);   // 3-е отражение: +35%
+    delays.push_back(baseDelay * 1.58f);   // 4-е отражение: +58%
+    delays.push_back(baseDelay * 1.84f);   // 5-е отражение: +84%
+    delays.push_back(baseDelay * 2.12f);   // 6-е отражение: +112%
+    delays.push_back(baseDelay * 2.43f);   // 7-е отражение: +143%
+    delays.push_back(baseDelay * 2.77f);   // 8-е отражение: +177%
     
     // Для правого канала добавляем небольшую декорреляцию
     if (isRightChannel)
@@ -399,14 +402,14 @@ std::vector<float> ReverbEngine::getEarlyReflectionDelays(bool isRightChannel)
         float spreadMs = (params.stereoSpread / sampleRate) * 1000.0f;
         for (auto& delay : delays)
         {
-            delay += spreadMs;
+            delay += spreadMs * 0.5f; // Уменьшаем декорреляцию для более плотной структуры
         }
     }
     
-    // ИСПРАВЛЕНО: Увеличенный максимум для early reflections
+    // ИСПРАВЛЕНО: Ограничиваем максимум для более плотной структуры
     for (auto& delay : delays)
     {
-        delay = MathUtils::clamp(delay, 5.0f, 80.0f); // Было 1-40ms, стало 5-80ms
+        delay = MathUtils::clamp(delay, 3.0f, 45.0f); // Было 5-80ms, стало 3-45ms
     }
     
     return delays;
@@ -624,7 +627,7 @@ void ReverbEngine::initializeEarlyReflections()
 {
     // Инициализация левого канала
     earlyReflectionsL.clear();
-    earlyReflectionsL.resize(6); // 6 early reflections
+    earlyReflectionsL.resize(8); // 8 early reflections (было 6)
     
     auto reflectionDelaysL = getEarlyReflectionDelays(false);
     
@@ -641,13 +644,13 @@ void ReverbEngine::initializeEarlyReflections()
         reflection.readIndex = 0;
         reflection.writeIndex = 0;
         
-        // ИСПРАВЛЕНО: Намного более тихие early reflections
-        reflection.gain = 0.02f / (static_cast<float>(i + 1)); // 0.02, 0.01, 0.007, 0.005... (было 0.5, 0.25, 0.17...)
+        // ИСПРАВЛЕНО: Намного более тихие early reflections с плавным затуханием
+        reflection.gain = 0.018f / (static_cast<float>(i + 1)); // 0.018, 0.009, 0.006, 0.0045... (еще тише)
     }
     
     // Инициализация правого канала
     earlyReflectionsR.clear();
-    earlyReflectionsR.resize(6); // 6 early reflections
+    earlyReflectionsR.resize(8); // 8 early reflections (было 6)
     
     auto reflectionDelaysR = getEarlyReflectionDelays(true);
     
@@ -664,8 +667,8 @@ void ReverbEngine::initializeEarlyReflections()
         reflection.readIndex = 0;
         reflection.writeIndex = 0;
         
-        // ИСПРАВЛЕНО: Намного более тихие early reflections
-        reflection.gain = 0.02f / (static_cast<float>(i + 1)); // 0.02, 0.01, 0.007, 0.005... (было 0.5, 0.25, 0.17...)
+        // ИСПРАВЛЕНО: Намного более тихие early reflections с плавным затуханием
+        reflection.gain = 0.018f / (static_cast<float>(i + 1)); // 0.018, 0.009, 0.006, 0.0045... (еще тише)
     }
 }
 
@@ -737,7 +740,7 @@ void ReverbEngine::updateEarlyReflections()
         newDelayTime = MathUtils::clamp(newDelayTime, 1, static_cast<int>(reflection.buffer.size() - 1));
         
         reflection.delayTime = newDelayTime;
-        reflection.gain = 0.02f / (static_cast<float>(i + 1)); // Убывающий gain
+        reflection.gain = 0.018f / (static_cast<float>(i + 1)); // Убывающий gain
     }
     
     // Правый канал
@@ -751,7 +754,7 @@ void ReverbEngine::updateEarlyReflections()
         newDelayTime = MathUtils::clamp(newDelayTime, 1, static_cast<int>(reflection.buffer.size() - 1));
         
         reflection.delayTime = newDelayTime;
-        reflection.gain = 0.02f / (static_cast<float>(i + 1)); // Убывающий gain
+        reflection.gain = 0.018f / (static_cast<float>(i + 1)); // Убывающий gain
     }
 }
 

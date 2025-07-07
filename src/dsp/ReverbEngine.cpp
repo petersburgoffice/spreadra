@@ -572,6 +572,11 @@ void ReverbEngine::initializeCombFilters()
         filter.outputGain = 1.0f;
         filter.targetOutputGain = 1.0f;
         filter.fadeRemaining = 0;
+        
+        // Инициализация новых полей для плавного перехода
+        filter.pendingParameterChange = false;
+        filter.newDelayTime = 0;
+        filter.newBufferSize = 0;
     }
     
     // Инициализация правого канала
@@ -602,6 +607,11 @@ void ReverbEngine::initializeCombFilters()
         filter.outputGain = 1.0f;
         filter.targetOutputGain = 1.0f;
         filter.fadeRemaining = 0;
+        
+        // Инициализация новых полей для плавного перехода
+        filter.pendingParameterChange = false;
+        filter.newDelayTime = 0;
+        filter.newBufferSize = 0;
     }
 }
 
@@ -632,6 +642,11 @@ void ReverbEngine::initializeAllPassFilters()
         filter.outputGain = 1.0f;
         filter.targetOutputGain = 1.0f;
         filter.fadeRemaining = 0;
+        
+        // Инициализация новых полей для плавного перехода
+        filter.pendingParameterChange = false;
+        filter.newDelayTime = 0;
+        filter.newBufferSize = 0;
     }
     
     // Инициализация правого канала
@@ -659,6 +674,11 @@ void ReverbEngine::initializeAllPassFilters()
         filter.outputGain = 1.0f;
         filter.targetOutputGain = 1.0f;
         filter.fadeRemaining = 0;
+        
+        // Инициализация новых полей для плавного перехода
+        filter.pendingParameterChange = false;
+        filter.newDelayTime = 0;
+        filter.newBufferSize = 0;
     }
 }
 
@@ -802,95 +822,90 @@ void ReverbEngine::updateEarlyReflections()
 //==============================================================================
 void ReverbEngine::updateDelayTimes()
 {
-    // ИСПРАВЛЕНО: Используем ту же логику что и при инициализации!
+    // ИСПРАВЛЕНО: Плавный переход вместо резкой очистки для устранения щелчков
     // Получаем правильно вычисленные задержки
     auto newDelaysL = getScaledCombDelays(false);
     auto newDelaysR = getScaledCombDelays(true);
     auto newAllPassDelaysL = getScaledAllPassDelays(false);
     auto newAllPassDelaysR = getScaledAllPassDelays(true);
     
+    // Длительность crossfade в сэмплах (15ms для плавного перехода)
+    int crossfadeSamples = static_cast<int>(0.015f * sampleRate);
+    
     // Обновляем delay time для comb фильтров - левый канал
     for (size_t i = 0; i < combFiltersL.size() && i < newDelaysL.size(); ++i)
     {
         size_t newDelayTime = static_cast<size_t>(newDelaysL[i]);
-        
-        // ИСПРАВЛЕНО: ВСЕГДА ресайзим буфер до нужного размера (не только увеличиваем!)
         size_t requiredBufferSize = newDelayTime + blockSize;
-        combFiltersL[i].buffer.resize(requiredBufferSize, 0.0f);
         
-        // ИСПРАВЛЕНО: Очищаем буфер чтобы убрать "память" от предыдущего roomSize
-        std::fill(combFiltersL[i].buffer.begin(), combFiltersL[i].buffer.end(), 0.0f);
-        combFiltersL[i].readIndex = 0;
-        combFiltersL[i].writeIndex = 0;
-        combFiltersL[i].delayTime = newDelayTime;
-        
-        // Убираем crossfade - он не нужен после очистки буфера
-        combFiltersL[i].outputGain = 1.0f;
-        combFiltersL[i].targetOutputGain = 1.0f;
-        combFiltersL[i].fadeRemaining = 0;
+        if (combFiltersL[i].delayTime != newDelayTime)
+        {
+            // Сохраняем новые параметры для применения после fade-out
+            combFiltersL[i].pendingParameterChange = true;
+            combFiltersL[i].newDelayTime = newDelayTime;
+            combFiltersL[i].newBufferSize = requiredBufferSize;
+            
+            // Запускаем fade-out для плавного перехода
+            combFiltersL[i].targetOutputGain = 0.0f;
+            combFiltersL[i].fadeRemaining = crossfadeSamples;
+        }
     }
     
     // Обновляем delay time для comb фильтров - правый канал
     for (size_t i = 0; i < combFiltersR.size() && i < newDelaysR.size(); ++i)
     {
         size_t newDelayTime = static_cast<size_t>(newDelaysR[i]);
-        
-        // ИСПРАВЛЕНО: ВСЕГДА ресайзим буфер до нужного размера (не только увеличиваем!)
         size_t requiredBufferSize = newDelayTime + blockSize;
-        combFiltersR[i].buffer.resize(requiredBufferSize, 0.0f);
         
-        // ИСПРАВЛЕНО: Очищаем буфер чтобы убрать "память" от предыдущего roomSize
-        std::fill(combFiltersR[i].buffer.begin(), combFiltersR[i].buffer.end(), 0.0f);
-        combFiltersR[i].readIndex = 0;
-        combFiltersR[i].writeIndex = 0;
-        combFiltersR[i].delayTime = newDelayTime;
-        
-        // Убираем crossfade - он не нужен после очистки буфера
-        combFiltersR[i].outputGain = 1.0f;
-        combFiltersR[i].targetOutputGain = 1.0f;
-        combFiltersR[i].fadeRemaining = 0;
+        if (combFiltersR[i].delayTime != newDelayTime)
+        {
+            // Сохраняем новые параметры для применения после fade-out
+            combFiltersR[i].pendingParameterChange = true;
+            combFiltersR[i].newDelayTime = newDelayTime;
+            combFiltersR[i].newBufferSize = requiredBufferSize;
+            
+            // Запускаем fade-out для плавного перехода
+            combFiltersR[i].targetOutputGain = 0.0f;
+            combFiltersR[i].fadeRemaining = crossfadeSamples;
+        }
     }
     
     // Обновляем delay time для all-pass фильтров - левый канал
     for (size_t i = 0; i < allPassFiltersL.size() && i < newAllPassDelaysL.size(); ++i)
     {
         size_t newDelayTime = static_cast<size_t>(newAllPassDelaysL[i]);
-        
-        // ИСПРАВЛЕНО: ВСЕГДА ресайзим буфер до нужного размера (не только увеличиваем!)
         size_t requiredBufferSize = newDelayTime + blockSize;
-        allPassFiltersL[i].buffer.resize(requiredBufferSize, 0.0f);
         
-        // ИСПРАВЛЕНО: Очищаем буфер чтобы убрать "память" от предыдущего roomSize
-        std::fill(allPassFiltersL[i].buffer.begin(), allPassFiltersL[i].buffer.end(), 0.0f);
-        allPassFiltersL[i].readIndex = 0;
-        allPassFiltersL[i].writeIndex = 0;
-        allPassFiltersL[i].delayTime = newDelayTime;
-        
-        // Убираем crossfade - он не нужен после очистки буфера
-        allPassFiltersL[i].outputGain = 1.0f;
-        allPassFiltersL[i].targetOutputGain = 1.0f;
-        allPassFiltersL[i].fadeRemaining = 0;
+        if (allPassFiltersL[i].delayTime != newDelayTime)
+        {
+            // Сохраняем новые параметры для применения после fade-out
+            allPassFiltersL[i].pendingParameterChange = true;
+            allPassFiltersL[i].newDelayTime = newDelayTime;
+            allPassFiltersL[i].newBufferSize = requiredBufferSize;
+            
+            // Запускаем fade-out для плавного перехода
+            allPassFiltersL[i].targetOutputGain = 0.0f;
+            allPassFiltersL[i].fadeRemaining = crossfadeSamples;
+        }
     }
     
     // Обновляем delay time для all-pass фильтров - правый канал
     for (size_t i = 0; i < allPassFiltersR.size() && i < newAllPassDelaysR.size(); ++i)
     {
         size_t newDelayTime = static_cast<size_t>(newAllPassDelaysR[i]);
-        
-        // ИСПРАВЛЕНО: ВСЕГДА ресайзим буфер до нужного размера (не только увеличиваем!)
         size_t requiredBufferSize = newDelayTime + blockSize;
-        allPassFiltersR[i].buffer.resize(requiredBufferSize, 0.0f);
         
-        // ИСПРАВЛЕНО: Очищаем буфер чтобы убрать "память" от предыдущего roomSize
-        std::fill(allPassFiltersR[i].buffer.begin(), allPassFiltersR[i].buffer.end(), 0.0f);
-        allPassFiltersR[i].readIndex = 0;
-        allPassFiltersR[i].writeIndex = 0;
-        allPassFiltersR[i].delayTime = newDelayTime;
-        
-        // Убираем crossfade - он не нужен после очистки буфера
-        allPassFiltersR[i].outputGain = 1.0f;
-        allPassFiltersR[i].targetOutputGain = 1.0f;
-        allPassFiltersR[i].fadeRemaining = 0;
+        if (allPassFiltersR[i].delayTime != newDelayTime)
+        {
+            // Сохраняем новые параметры для применения после fade-out
+            allPassFiltersR[i].pendingParameterChange = true;
+            allPassFiltersR[i].newDelayTime = newDelayTime;
+            allPassFiltersR[i].newBufferSize = requiredBufferSize;
+            
+            // Запускаем fade-out для плавного перехода
+            allPassFiltersR[i].targetOutputGain = 0.0f;
+            allPassFiltersR[i].fadeRemaining = crossfadeSamples;
+        }
     }
 }
 
@@ -907,6 +922,32 @@ void ReverbEngine::processCombFilter(const float* input, float* output, int numS
     
     for (int i = 0; i < numSamples; ++i)
     {
+        // Обрабатываем crossfade для плавного перехода
+        if (filter.fadeRemaining > 0)
+        {
+            float fadeStep = (filter.targetOutputGain - filter.outputGain) / filter.fadeRemaining;
+            filter.outputGain += fadeStep;
+            filter.fadeRemaining--;
+            
+            // Проверяем, завершился ли fade-out и есть ли pending изменения
+            if (filter.fadeRemaining == 0 && 
+                filter.pendingParameterChange && 
+                filter.outputGain <= 0.01f) // Практически беззвучно
+            {
+                // Применяем новые параметры при минимальной громкости
+                filter.buffer.resize(filter.newBufferSize, 0.0f);
+                std::fill(filter.buffer.begin(), filter.buffer.end(), 0.0f);
+                filter.readIndex = 0;
+                filter.writeIndex = 0;
+                filter.delayTime = filter.newDelayTime;
+                filter.pendingParameterChange = false;
+                
+                // Запускаем fade-in
+                filter.targetOutputGain = 1.0f;
+                filter.fadeRemaining = static_cast<int>(0.015f * sampleRate); // 15ms fade-in
+            }
+        }
+        
         // Читаем задержанный сигнал
         float delayed = filter.buffer[filter.readIndex];
         
@@ -923,8 +964,8 @@ void ReverbEngine::processCombFilter(const float* input, float* output, int numS
         // Записываем в буфер
         filter.buffer[filter.writeIndex] = combOutput;
         
-        // ИСПРАВЛЕНО: Убираем crossfade механизм - он больше не нужен
-        output[i] = combOutput;
+        // Применяем crossfade gain к выходному сигналу
+        output[i] = combOutput * filter.outputGain;
         
         // Обновляем индексы
         filter.readIndex = (filter.readIndex + 1) % bufferSize;
@@ -941,6 +982,32 @@ void ReverbEngine::processAllPassFilter(const float* input, float* output, int n
     
     for (int i = 0; i < numSamples; ++i)
     {
+        // Обрабатываем crossfade для плавного перехода
+        if (filter.fadeRemaining > 0)
+        {
+            float fadeStep = (filter.targetOutputGain - filter.outputGain) / filter.fadeRemaining;
+            filter.outputGain += fadeStep;
+            filter.fadeRemaining--;
+            
+            // Проверяем, завершился ли fade-out и есть ли pending изменения
+            if (filter.fadeRemaining == 0 && 
+                filter.pendingParameterChange && 
+                filter.outputGain <= 0.01f) // Практически беззвучно
+            {
+                // Применяем новые параметры при минимальной громкости
+                filter.buffer.resize(filter.newBufferSize, 0.0f);
+                std::fill(filter.buffer.begin(), filter.buffer.end(), 0.0f);
+                filter.readIndex = 0;
+                filter.writeIndex = 0;
+                filter.delayTime = filter.newDelayTime;
+                filter.pendingParameterChange = false;
+                
+                // Запускаем fade-in
+                filter.targetOutputGain = 1.0f;
+                filter.fadeRemaining = static_cast<int>(0.015f * sampleRate); // 15ms fade-in
+            }
+        }
+        
         // Читаем задержанный сигнал
         float delayed = filter.buffer[filter.readIndex];
         
@@ -951,8 +1018,8 @@ void ReverbEngine::processAllPassFilter(const float* input, float* output, int n
         // Записываем в буфер
         filter.buffer[filter.writeIndex] = input[i] + filter.feedback * delayed;
         
-        // ИСПРАВЛЕНО: Убираем crossfade механизм - он больше не нужен
-        output[i] = allPassOutput;
+        // Применяем crossfade gain к выходному сигналу
+        output[i] = allPassOutput * filter.outputGain;
         
         // Обновляем индексы
         filter.readIndex = (filter.readIndex + 1) % bufferSize;

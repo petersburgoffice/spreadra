@@ -72,10 +72,15 @@ private:
         float feedback = 0.0f;
         float damping = 0.0f;
         
-        // ПРОСТОЙ CROSSFADE для выходного сигнала при изменении параметров
+        // ПЛАВНЫЙ CROSSFADE для устранения щелчков при изменении параметров
         float outputGain = 1.0f;        // Текущий gain выхода
         float targetOutputGain = 1.0f;  // Целевой gain
         int fadeRemaining = 0;          // Оставшиеся сэмплы fade
+        
+        // Новые параметры для применения после fade-out
+        bool pendingParameterChange = false;
+        size_t newDelayTime = 0;
+        size_t newBufferSize = 0;
     };
 
     //==============================================================================
@@ -88,10 +93,15 @@ private:
         size_t delayTime = 0;
         float feedback = 0.0f;
         
-        // ПРОСТОЙ CROSSFADE для выходного сигнала при изменении параметров
+        // ПЛАВНЫЙ CROSSFADE для устранения щелчков при изменении параметров
         float outputGain = 1.0f;        // Текущий gain выхода
         float targetOutputGain = 1.0f;  // Целевой gain
         int fadeRemaining = 0;          // Оставшиеся сэмплы fade
+        
+        // Новые параметры для применения после fade-out
+        bool pendingParameterChange = false;
+        size_t newDelayTime = 0;
+        size_t newBufferSize = 0;
     };
 
     //==============================================================================

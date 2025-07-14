@@ -1,15 +1,14 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
-#include "PitchShifter.h"
 #include "ReverbEngine.h"
 #include "FilterBank.h"
 
 /**
- * @brief Основной DSP алгоритм для shimmer-эффекта
+ * @brief Основной DSP алгоритм для реверберации
  * 
  * Этот класс интегрирует все DSP компоненты в единый pipeline:
- * Input → Delay → Pitch Shift → Reverb → Output
+ * Input → Reverb → Output
  * 
  * Алгоритм основан на работе Schroeder (1961) и современных
  * методах цифровой обработки сигналов.
@@ -36,11 +35,6 @@ public:
     // Параметры алгоритма
     struct Parameters
     {
-        // Pitch shift parameters
-        float pitchShift = 12.0f;      // semitones, -24 to +24
-        float formantPreservation = 80.0f; // %, 0-100
-        float quality = 80.0f;         // %, 0-100
-        
         // Reverb parameters
         float roomSize = 1000.0f;      // m², 10-10000
         float decayTime = 3.0f;        // seconds, 0.1-20
@@ -56,7 +50,6 @@ public:
         
         // Mix parameters
         float dryWet = 50.0f;          // %, 0-100
-        float shimmerMix = 50.0f;      // %, 0-100
     };
 
     void setParameters(const Parameters& newParams);
@@ -64,7 +57,6 @@ public:
 
     //==============================================================================
     // Индивидуальные параметры
-    void setPitchShift(float semitones);
     void setRoomSize(float roomSizeM2);
     void setDecayTime(float decayTimeSeconds);
     void setDryWet(float dryWetPercent);
@@ -72,7 +64,6 @@ public:
 
     //==============================================================================
     // DSP компоненты
-    PitchShifter& getPitchShifter() { return pitchShifter; }
     ReverbEngine& getReverbEngine() { return reverbEngine; }
     FilterBank& getFilterBank() { return filterBank; }
 
@@ -85,7 +76,6 @@ public:
 private:
     //==============================================================================
     // DSP компоненты
-    PitchShifter pitchShifter;
     ReverbEngine reverbEngine;
     FilterBank filterBank;
 

@@ -577,6 +577,11 @@ void ReverbEngine::initializeCombFilters()
         filter.pendingParameterChange = false;
         filter.newDelayTime = 0;
         filter.newBufferSize = 0;
+        
+        // Инициализация fractional delay
+        filter.currentDelayTime = static_cast<float>(delayTime);
+        filter.targetDelayTime = static_cast<float>(delayTime);
+        filter.delayChangeRate = 0.0f;
     }
     
     // Инициализация правого канала
@@ -612,6 +617,11 @@ void ReverbEngine::initializeCombFilters()
         filter.pendingParameterChange = false;
         filter.newDelayTime = 0;
         filter.newBufferSize = 0;
+        
+        // Инициализация fractional delay
+        filter.currentDelayTime = static_cast<float>(delayTime);
+        filter.targetDelayTime = static_cast<float>(delayTime);
+        filter.delayChangeRate = 0.0f;
     }
 }
 
@@ -647,6 +657,11 @@ void ReverbEngine::initializeAllPassFilters()
         filter.pendingParameterChange = false;
         filter.newDelayTime = 0;
         filter.newBufferSize = 0;
+        
+        // Инициализация fractional delay
+        filter.currentDelayTime = static_cast<float>(delayTime);
+        filter.targetDelayTime = static_cast<float>(delayTime);
+        filter.delayChangeRate = 0.0f;
     }
     
     // Инициализация правого канала
@@ -679,6 +694,11 @@ void ReverbEngine::initializeAllPassFilters()
         filter.pendingParameterChange = false;
         filter.newDelayTime = 0;
         filter.newBufferSize = 0;
+        
+        // Инициализация fractional delay
+        filter.currentDelayTime = static_cast<float>(delayTime);
+        filter.targetDelayTime = static_cast<float>(delayTime);
+        filter.delayChangeRate = 0.0f;
     }
 }
 
@@ -822,92 +842,143 @@ void ReverbEngine::updateEarlyReflections()
 //==============================================================================
 void ReverbEngine::updateDelayTimes()
 {
-    // ИСПРАВЛЕНО: Плавный переход вместо резкой очистки для устранения щелчков
-    // Получаем правильно вычисленные задержки
+    // НОВЫЙ ПОДХОД: Плавное изменение времени задержки как у DecayTime
+    // Используем fractional delay с интерполяцией - как в профессиональных reverb
+    
+    // Получаем новые времена задержек
     auto newDelaysL = getScaledCombDelays(false);
     auto newDelaysR = getScaledCombDelays(true);
     auto newAllPassDelaysL = getScaledAllPassDelays(false);
     auto newAllPassDelaysR = getScaledAllPassDelays(true);
     
-    // Длительность crossfade в сэмплах (15ms для плавного перехода)
-    int crossfadeSamples = static_cast<int>(0.015f * sampleRate);
+    // Скорость изменения задержки (чем меньше, тем плавнее)
+    // 0.001 = очень медленно, 0.1 = быстро
+    float delayTransitionSpeed = 0.01f; // 1% изменения за сэмпл
     
-    // Обновляем delay time для comb фильтров - левый канал
+    // Обновляем comb фильтры - левый канал
     for (size_t i = 0; i < combFiltersL.size() && i < newDelaysL.size(); ++i)
     {
-        size_t newDelayTime = static_cast<size_t>(newDelaysL[i]);
-        size_t requiredBufferSize = newDelayTime + blockSize;
+        float newDelayTime = static_cast<float>(newDelaysL[i]);
         
-        if (combFiltersL[i].delayTime != newDelayTime)
+        // Инициализация fractional delay при первом использовании
+        if (combFiltersL[i].currentDelayTime == 0.0f)
         {
-            // Сохраняем новые параметры для применения после fade-out
-            combFiltersL[i].pendingParameterChange = true;
-            combFiltersL[i].newDelayTime = newDelayTime;
-            combFiltersL[i].newBufferSize = requiredBufferSize;
+            combFiltersL[i].currentDelayTime = newDelayTime;
+            combFiltersL[i].targetDelayTime = newDelayTime;
+        }
+        else
+        {
+            // Устанавливаем новую цель для плавного перехода
+            combFiltersL[i].targetDelayTime = newDelayTime;
             
-            // Запускаем fade-out для плавного перехода
-            combFiltersL[i].targetOutputGain = 0.0f;
-            combFiltersL[i].fadeRemaining = crossfadeSamples;
+            // Вычисляем скорость изменения
+            float delayDifference = combFiltersL[i].targetDelayTime - combFiltersL[i].currentDelayTime;
+            combFiltersL[i].delayChangeRate = delayDifference * delayTransitionSpeed;
+        }
+        
+        // Убеждаемся что буфер достаточно большой для любого времени задержки
+        size_t maxPossibleDelayTime = static_cast<size_t>(newDelayTime * 1.2f); // 20% запас
+        size_t requiredBufferSize = maxPossibleDelayTime + blockSize;
+        
+        if (combFiltersL[i].buffer.size() < requiredBufferSize)
+        {
+            combFiltersL[i].buffer.resize(requiredBufferSize, 0.0f);
         }
     }
     
-    // Обновляем delay time для comb фильтров - правый канал
+    // Обновляем comb фильтры - правый канал
     for (size_t i = 0; i < combFiltersR.size() && i < newDelaysR.size(); ++i)
     {
-        size_t newDelayTime = static_cast<size_t>(newDelaysR[i]);
-        size_t requiredBufferSize = newDelayTime + blockSize;
+        float newDelayTime = static_cast<float>(newDelaysR[i]);
         
-        if (combFiltersR[i].delayTime != newDelayTime)
+        // Инициализация fractional delay при первом использовании
+        if (combFiltersR[i].currentDelayTime == 0.0f)
         {
-            // Сохраняем новые параметры для применения после fade-out
-            combFiltersR[i].pendingParameterChange = true;
-            combFiltersR[i].newDelayTime = newDelayTime;
-            combFiltersR[i].newBufferSize = requiredBufferSize;
+            combFiltersR[i].currentDelayTime = newDelayTime;
+            combFiltersR[i].targetDelayTime = newDelayTime;
+        }
+        else
+        {
+            // Устанавливаем новую цель для плавного перехода
+            combFiltersR[i].targetDelayTime = newDelayTime;
             
-            // Запускаем fade-out для плавного перехода
-            combFiltersR[i].targetOutputGain = 0.0f;
-            combFiltersR[i].fadeRemaining = crossfadeSamples;
+            // Вычисляем скорость изменения
+            float delayDifference = combFiltersR[i].targetDelayTime - combFiltersR[i].currentDelayTime;
+            combFiltersR[i].delayChangeRate = delayDifference * delayTransitionSpeed;
+    }
+    
+        // Убеждаемся что буфер достаточно большой для любого времени задержки
+        size_t maxPossibleDelayTime = static_cast<size_t>(newDelayTime * 1.2f); // 20% запас
+        size_t requiredBufferSize = maxPossibleDelayTime + blockSize;
+        
+        if (combFiltersR[i].buffer.size() < requiredBufferSize)
+        {
+            combFiltersR[i].buffer.resize(requiredBufferSize, 0.0f);
         }
     }
     
-    // Обновляем delay time для all-pass фильтров - левый канал
+    // Обновляем allpass фильтры - левый канал
     for (size_t i = 0; i < allPassFiltersL.size() && i < newAllPassDelaysL.size(); ++i)
     {
-        size_t newDelayTime = static_cast<size_t>(newAllPassDelaysL[i]);
-        size_t requiredBufferSize = newDelayTime + blockSize;
+        float newDelayTime = static_cast<float>(newAllPassDelaysL[i]);
         
-        if (allPassFiltersL[i].delayTime != newDelayTime)
+        // Инициализация fractional delay при первом использовании
+        if (allPassFiltersL[i].currentDelayTime == 0.0f)
         {
-            // Сохраняем новые параметры для применения после fade-out
-            allPassFiltersL[i].pendingParameterChange = true;
-            allPassFiltersL[i].newDelayTime = newDelayTime;
-            allPassFiltersL[i].newBufferSize = requiredBufferSize;
+            allPassFiltersL[i].currentDelayTime = newDelayTime;
+            allPassFiltersL[i].targetDelayTime = newDelayTime;
+        }
+        else
+        {
+            // Устанавливаем новую цель для плавного перехода
+            allPassFiltersL[i].targetDelayTime = newDelayTime;
             
-            // Запускаем fade-out для плавного перехода
-            allPassFiltersL[i].targetOutputGain = 0.0f;
-            allPassFiltersL[i].fadeRemaining = crossfadeSamples;
+            // Вычисляем скорость изменения
+            float delayDifference = allPassFiltersL[i].targetDelayTime - allPassFiltersL[i].currentDelayTime;
+            allPassFiltersL[i].delayChangeRate = delayDifference * delayTransitionSpeed;
+    }
+
+        // Убеждаемся что буфер достаточно большой для любого времени задержки
+        size_t maxPossibleDelayTime = static_cast<size_t>(newDelayTime * 1.2f); // 20% запас
+        size_t requiredBufferSize = maxPossibleDelayTime + blockSize;
+        
+        if (allPassFiltersL[i].buffer.size() < requiredBufferSize)
+        {
+            allPassFiltersL[i].buffer.resize(requiredBufferSize, 0.0f);
         }
     }
     
-    // Обновляем delay time для all-pass фильтров - правый канал
+    // Обновляем allpass фильтры - правый канал
     for (size_t i = 0; i < allPassFiltersR.size() && i < newAllPassDelaysR.size(); ++i)
     {
-        size_t newDelayTime = static_cast<size_t>(newAllPassDelaysR[i]);
-        size_t requiredBufferSize = newDelayTime + blockSize;
+        float newDelayTime = static_cast<float>(newAllPassDelaysR[i]);
         
-        if (allPassFiltersR[i].delayTime != newDelayTime)
+        // Инициализация fractional delay при первом использовании
+        if (allPassFiltersR[i].currentDelayTime == 0.0f)
         {
-            // Сохраняем новые параметры для применения после fade-out
-            allPassFiltersR[i].pendingParameterChange = true;
-            allPassFiltersR[i].newDelayTime = newDelayTime;
-            allPassFiltersR[i].newBufferSize = requiredBufferSize;
+            allPassFiltersR[i].currentDelayTime = newDelayTime;
+            allPassFiltersR[i].targetDelayTime = newDelayTime;
+    }
+        else
+        {
+            // Устанавливаем новую цель для плавного перехода
+            allPassFiltersR[i].targetDelayTime = newDelayTime;
             
-            // Запускаем fade-out для плавного перехода
-            allPassFiltersR[i].targetOutputGain = 0.0f;
-            allPassFiltersR[i].fadeRemaining = crossfadeSamples;
+            // Вычисляем скорость изменения
+            float delayDifference = allPassFiltersR[i].targetDelayTime - allPassFiltersR[i].currentDelayTime;
+            allPassFiltersR[i].delayChangeRate = delayDifference * delayTransitionSpeed;
+    }
+
+        // Убеждаемся что буфер достаточно большой для любого времени задержки
+        size_t maxPossibleDelayTime = static_cast<size_t>(newDelayTime * 1.2f); // 20% запас
+        size_t requiredBufferSize = maxPossibleDelayTime + blockSize;
+        
+        if (allPassFiltersR[i].buffer.size() < requiredBufferSize)
+    {
+            allPassFiltersR[i].buffer.resize(requiredBufferSize, 0.0f);
         }
     }
-}
+    }
 
 //==============================================================================
 // Обработка сигнала
@@ -922,38 +993,24 @@ void ReverbEngine::processCombFilter(const float* input, float* output, int numS
     
     for (int i = 0; i < numSamples; ++i)
     {
-        // Обрабатываем crossfade для плавного перехода
-        if (filter.fadeRemaining > 0)
+        // FRACTIONAL DELAY: Плавное изменение времени задержки
+        if (std::abs(filter.currentDelayTime - filter.targetDelayTime) > 0.1f)
         {
-            float fadeStep = (filter.targetOutputGain - filter.outputGain) / filter.fadeRemaining;
-            filter.outputGain += fadeStep;
-            filter.fadeRemaining--;
+            filter.currentDelayTime += filter.delayChangeRate;
             
-            // Проверяем, завершился ли fade-out и есть ли pending изменения
-            if (filter.fadeRemaining == 0 && 
-                filter.pendingParameterChange && 
-                filter.outputGain <= 0.01f) // Практически беззвучно
-            {
-                // Применяем новые параметры при минимальной громкости
-                filter.buffer.resize(filter.newBufferSize, 0.0f);
-                std::fill(filter.buffer.begin(), filter.buffer.end(), 0.0f);
-                filter.readIndex = 0;
-                filter.writeIndex = 0;
-                filter.delayTime = filter.newDelayTime;
-                filter.pendingParameterChange = false;
-                
-                // Запускаем fade-in
-                filter.targetOutputGain = 1.0f;
-                filter.fadeRemaining = static_cast<int>(0.015f * sampleRate); // 15ms fade-in
-            }
+            // Защита от переполнения
+            if (filter.delayChangeRate > 0 && filter.currentDelayTime > filter.targetDelayTime)
+                filter.currentDelayTime = filter.targetDelayTime;
+            else if (filter.delayChangeRate < 0 && filter.currentDelayTime < filter.targetDelayTime)
+                filter.currentDelayTime = filter.targetDelayTime;
         }
         
-        // Читаем задержанный сигнал
-        float delayed = filter.buffer[filter.readIndex];
+        // Читаем задержанный сигнал с интерполяцией
+        float fractionalDelay = filter.currentDelayTime;
+        float delayedSample = readWithInterpolation(filter.buffer, filter.writeIndex, fractionalDelay, bufferSize);
         
         // ПРАВИЛЬНАЯ COMB FORMULA: y[n] = x[n] + g*y[n-M]
-        // Включаем исходный сигнал для работы ручек
-        float combOutput = input[i] + filter.feedback * delayed;
+        float combOutput = input[i] + filter.feedback * delayedSample;
         
         // Применяем damping для высокочастотного затухания
         if (filter.damping > 0.0f)
@@ -964,11 +1021,10 @@ void ReverbEngine::processCombFilter(const float* input, float* output, int numS
         // Записываем в буфер
         filter.buffer[filter.writeIndex] = combOutput;
         
-        // Применяем crossfade gain к выходному сигналу
-        output[i] = combOutput * filter.outputGain;
+        // Выходной сигнал (убрали crossfade - теперь плавность обеспечивает fractional delay)
+        output[i] = combOutput;
         
-        // Обновляем индексы
-        filter.readIndex = (filter.readIndex + 1) % bufferSize;
+        // Обновляем write index
         filter.writeIndex = (filter.writeIndex + 1) % bufferSize;
     }
 }
@@ -982,47 +1038,32 @@ void ReverbEngine::processAllPassFilter(const float* input, float* output, int n
     
     for (int i = 0; i < numSamples; ++i)
     {
-        // Обрабатываем crossfade для плавного перехода
-        if (filter.fadeRemaining > 0)
+        // FRACTIONAL DELAY: Плавное изменение времени задержки
+        if (std::abs(filter.currentDelayTime - filter.targetDelayTime) > 0.1f)
         {
-            float fadeStep = (filter.targetOutputGain - filter.outputGain) / filter.fadeRemaining;
-            filter.outputGain += fadeStep;
-            filter.fadeRemaining--;
+            filter.currentDelayTime += filter.delayChangeRate;
             
-            // Проверяем, завершился ли fade-out и есть ли pending изменения
-            if (filter.fadeRemaining == 0 && 
-                filter.pendingParameterChange && 
-                filter.outputGain <= 0.01f) // Практически беззвучно
-            {
-                // Применяем новые параметры при минимальной громкости
-                filter.buffer.resize(filter.newBufferSize, 0.0f);
-                std::fill(filter.buffer.begin(), filter.buffer.end(), 0.0f);
-                filter.readIndex = 0;
-                filter.writeIndex = 0;
-                filter.delayTime = filter.newDelayTime;
-                filter.pendingParameterChange = false;
-                
-                // Запускаем fade-in
-                filter.targetOutputGain = 1.0f;
-                filter.fadeRemaining = static_cast<int>(0.015f * sampleRate); // 15ms fade-in
-            }
+            // Защита от переполнения
+            if (filter.delayChangeRate > 0 && filter.currentDelayTime > filter.targetDelayTime)
+                filter.currentDelayTime = filter.targetDelayTime;
+            else if (filter.delayChangeRate < 0 && filter.currentDelayTime < filter.targetDelayTime)
+                filter.currentDelayTime = filter.targetDelayTime;
         }
         
-        // Читаем задержанный сигнал
-        float delayed = filter.buffer[filter.readIndex];
+        // Читаем задержанный сигнал с интерполяцией
+        float fractionalDelay = filter.currentDelayTime;
+        float delayedSample = readWithInterpolation(filter.buffer, filter.writeIndex, fractionalDelay, bufferSize);
         
         // ПРАВИЛЬНАЯ ALL-PASS FORMULA: y[n] = -g*x[n] + x[n-M] + g*y[n-M]
-        // Включаем исходный сигнал для работы ручек
-        float allPassOutput = -filter.feedback * input[i] + delayed + filter.feedback * delayed;
+        float allPassOutput = -filter.feedback * input[i] + delayedSample + filter.feedback * delayedSample;
         
         // Записываем в буфер
-        filter.buffer[filter.writeIndex] = input[i] + filter.feedback * delayed;
+        filter.buffer[filter.writeIndex] = input[i] + filter.feedback * delayedSample;
         
-        // Применяем crossfade gain к выходному сигналу
-        output[i] = allPassOutput * filter.outputGain;
+        // Выходной сигнал (убрали crossfade - теперь плавность обеспечивает fractional delay)
+        output[i] = allPassOutput;
         
-        // Обновляем индексы
-        filter.readIndex = (filter.readIndex + 1) % bufferSize;
+        // Обновляем write index
         filter.writeIndex = (filter.writeIndex + 1) % bufferSize;
     }
 }
@@ -1093,4 +1134,31 @@ void ReverbEngine::updateStereoMixing()
         wet2 /= totalGain;
         dry /= totalGain;
     }
+}
+
+// Вспомогательная функция для чтения с интерполяцией (fractional delay)
+float ReverbEngine::readWithInterpolation(const std::vector<float>& buffer, size_t writeIndex, float fractionalDelay, size_t bufferSize)
+{
+    if (buffer.empty() || fractionalDelay <= 0.0f)
+        return 0.0f;
+        
+    // Вычисляем позицию чтения (назад от writeIndex)
+    float readPosition = static_cast<float>(writeIndex) - fractionalDelay;
+    
+    // Обрабатываем wrap-around
+    while (readPosition < 0)
+        readPosition += static_cast<float>(bufferSize);
+    while (readPosition >= static_cast<float>(bufferSize))
+        readPosition -= static_cast<float>(bufferSize);
+        
+    // Получаем целую и дробную части
+    int readIndex1 = static_cast<int>(readPosition);
+    int readIndex2 = (readIndex1 + 1) % bufferSize;
+    float fraction = readPosition - static_cast<float>(readIndex1);
+    
+    // Линейная интерполяция между двумя соседними сэмплами
+    float sample1 = buffer[readIndex1];
+    float sample2 = buffer[readIndex2];
+    
+    return sample1 + fraction * (sample2 - sample1);
 } 

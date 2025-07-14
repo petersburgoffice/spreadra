@@ -81,6 +81,11 @@ private:
         bool pendingParameterChange = false;
         size_t newDelayTime = 0;
         size_t newBufferSize = 0;
+        
+        // FRACTIONAL DELAY для плавного изменения времени задержки
+        float currentDelayTime = 0.0f;   // Текущее время задержки (может быть дробным)
+        float targetDelayTime = 0.0f;    // Целевое время задержки
+        float delayChangeRate = 0.0f;    // Скорость изменения задержки (сэмплов/сэмпл)
     };
 
     //==============================================================================
@@ -102,6 +107,11 @@ private:
         bool pendingParameterChange = false;
         size_t newDelayTime = 0;
         size_t newBufferSize = 0;
+        
+        // FRACTIONAL DELAY для плавного изменения времени задержки
+        float currentDelayTime = 0.0f;   // Текущее время задержки (может быть дробным)
+        float targetDelayTime = 0.0f;    // Целевое время задержки
+        float delayChangeRate = 0.0f;    // Скорость изменения задержки (сэмплов/сэмпл)
     };
 
     //==============================================================================
@@ -190,6 +200,9 @@ private:
     
     // Логирование состояния реверберации
     void logReverbState() const;
+
+    // Вспомогательные функции для fractional delay
+    float readWithInterpolation(const std::vector<float>& buffer, size_t writeIndex, float fractionalDelay, size_t bufferSize);
 
     // JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReverbEngine)

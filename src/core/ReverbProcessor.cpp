@@ -1,5 +1,6 @@
 #include "ReverbProcessor.h"
 #include "../gui/ReverbEditor.h"
+ #include <algorithm>
 
 //==============================================================================
 ReverbProcessor::ReverbProcessor()
@@ -118,7 +119,13 @@ bool ReverbProcessor::isMidiEffect() const
 
 double ReverbProcessor::getTailLengthSeconds() const
 {
-    return 2.0;
+    float currentDecayTime = parameters.getRawParameterValue("decayTime")->load();
+    float roomSize = parameters.getRawParameterValue("roomSize")->load();
+    
+    // Учитываем и decay time, и room size
+    float calculatedTail = currentDecayTime + (roomSize / 10000.0f) * 5.0f;
+    
+    return std::clamp(static_cast<double>(calculatedTail), 1.0, 25.0);
 }
 
 //==============================================================================
@@ -170,12 +177,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReverbProcessor::createParam
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
-    // Pitch parameters
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "pitchShift", "Pitch Shift", juce::NormalisableRange<float>(-24.0f, 24.0f, 0.1f), 12.0f,
-        juce::String(), juce::AudioProcessorParameter::genericParameter,
-        [](float value, int) { return juce::String(value, 1) + " st"; }));
-    
     // Reverb parameters
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         "roomSize", "Room Size", juce::NormalisableRange<float>(10.0f, 10000.0f, 10.0f), 1000.0f,
@@ -205,14 +206,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReverbProcessor::createParam
 void ReverbProcessor::updateParameters()
 {
     // Получение параметров из AudioProcessorValueTreeState
-    float pitchShift = parameters.getRawParameterValue("pitchShift")->load();
     float roomSize = parameters.getRawParameterValue("roomSize")->load();
     float decayTime = parameters.getRawParameterValue("decayTime")->load();
     float dryWet = parameters.getRawParameterValue("dryWet")->load();
     float stereoWidth = parameters.getRawParameterValue("stereoWidth")->load();
     
     // Обновление параметров reverb-ядра
-    reverbAlgorithm.setPitchShift(pitchShift);
     reverbAlgorithm.setRoomSize(roomSize);
     reverbAlgorithm.setDecayTime(decayTime);
     reverbAlgorithm.setDryWet(dryWet);

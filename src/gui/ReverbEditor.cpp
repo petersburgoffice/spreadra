@@ -7,18 +7,12 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     setSize(600, 520);
     
     // Создание слайдеров для параметров
-    addAndMakeVisible(pitchShiftSlider);
     addAndMakeVisible(roomSizeSlider);
     addAndMakeVisible(decayTimeSlider);
     addAndMakeVisible(dryWetSlider);
     addAndMakeVisible(stereoWidthSlider);
     
     // Настройка слайдеров
-    pitchShiftSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    pitchShiftSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    pitchShiftSlider.setRange(-24.0, 24.0, 0.1);
-    pitchShiftSlider.setValue(12.0);
-    
     roomSizeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     roomSizeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
     roomSizeSlider.setRange(10.0, 10000.0, 10.0);
@@ -40,8 +34,6 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     stereoWidthSlider.setValue(100.0);
     
     // Подключение к параметрам процессора
-    pitchShiftAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        processor.getValueTreeState(), "pitchShift", pitchShiftSlider);
     roomSizeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         processor.getValueTreeState(), "roomSize", roomSizeSlider);
     decayTimeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -71,7 +63,6 @@ void ReverbEditor::paint(juce::Graphics& g)
     
     // Заголовки для слайдеров
     g.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
-    g.drawText("Pitch Shift", pitchShiftSlider.getBounds().translated(0, -25), juce::Justification::centred);
     g.drawText("Room Size", roomSizeSlider.getBounds().translated(0, -25), juce::Justification::centred);
     g.drawText("Decay Time", decayTimeSlider.getBounds().translated(0, -25), juce::Justification::centred);
     g.drawText("Dry/Wet", dryWetSlider.getBounds().translated(0, -25), juce::Justification::centred);
@@ -87,25 +78,22 @@ void ReverbEditor::resized()
     const int sliderHeight = 120;
     const int spacing = 20;
     
-    // Расположение слайдеров в три ряда
+    // Расположение слайдеров в два ряда
     auto topRow = bounds.removeFromTop(sliderHeight);
-    auto middleRow = bounds.removeFromTop(sliderHeight);
     auto bottomRow = bounds.removeFromTop(sliderHeight);
     
     // Первый ряд
-    pitchShiftSlider.setBounds(topRow.removeFromLeft(sliderWidth));
-    topRow.removeFromLeft(spacing);
-    
     roomSizeSlider.setBounds(topRow.removeFromLeft(sliderWidth));
     topRow.removeFromLeft(spacing);
     
     decayTimeSlider.setBounds(topRow.removeFromLeft(sliderWidth));
+    topRow.removeFromLeft(spacing);
     
     // Второй ряд
-    dryWetSlider.setBounds(middleRow.removeFromLeft(sliderWidth));
-    middleRow.removeFromLeft(spacing);
+    dryWetSlider.setBounds(bottomRow.removeFromLeft(sliderWidth));
+    bottomRow.removeFromLeft(spacing);
     
-    stereoWidthSlider.setBounds(middleRow.removeFromLeft(sliderWidth));
+    stereoWidthSlider.setBounds(bottomRow.removeFromLeft(sliderWidth));
     
     // Размещение версии в правом нижнем углу
     versionLabel.setBounds(getWidth() - 80, getHeight() - 25, 70, 20);

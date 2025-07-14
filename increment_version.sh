@@ -22,4 +22,4 @@ NEW_VERSION="$MAJOR.$MINOR.$BUILD"
 # Записываем обратно в файл
 echo "$NEW_VERSION" > version.txt
 
-echo "Version updated: $VERSION -> $NEW_VERSION" 
+echo "Version updated: $VERSION -> $NEW_VERSION"

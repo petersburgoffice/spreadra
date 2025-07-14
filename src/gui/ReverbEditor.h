@@ -22,14 +22,12 @@ private:
     ReverbProcessor& processor;
 
     // Слайдеры для параметров
-    juce::Slider pitchShiftSlider;
     juce::Slider roomSizeSlider;
     juce::Slider decayTimeSlider;
     juce::Slider dryWetSlider;
     juce::Slider stereoWidthSlider;
 
     // Attachments для связи с параметрами
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pitchShiftAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> roomSizeAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> decayTimeAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryWetAttachment;

@@ -31,11 +31,6 @@ public:
         float modulation = 0.0f;       // Hz, 0-10
         float modulationDepth = 0.0f;  // ms, 0-50
         
-        // Pitch shift parameters
-        float pitchShift = 12.0f;      // semitones, -24 to +24
-        float formantPreservation = 80.0f; // %, 0-100
-        float quality = 1.0f;          // 0.5-1.0
-        
         // Reverb parameters
         float roomSize = 1000.0f;      // m², 10-10000
         float decayTime = 3.0f;        // seconds, 0.1-20
@@ -45,7 +40,6 @@ public:
         
         // Mix parameters
         float dryWet = 50.0f;          // %, 0-100
-        float shimmerMix = 50.0f;      // %, 0-100
         
         // Filter parameters
         float lowPassFreq = 20000.0f;  // Hz, 20-20000

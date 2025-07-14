@@ -6,7 +6,6 @@
 ReverbAlgorithm::ReverbAlgorithm()
 {
     // Инициализация параметров по умолчанию
-    params.pitchShift = 12.0f;
     params.roomSize = 1000.0f;
     params.decayTime = 3.0f;
     params.dryWet = 50.0f;
@@ -23,7 +22,6 @@ void ReverbAlgorithm::prepare(double sampleRate, int blockSize)
     this->blockSize = blockSize;
     
     // Подготовка DSP компонентов
-    pitchShifter.prepare(sampleRate, blockSize);
     reverbEngine.prepare(sampleRate, blockSize);
     filterBank.prepare(sampleRate, blockSize);
     
@@ -42,7 +40,6 @@ void ReverbAlgorithm::prepare(double sampleRate, int blockSize)
 
 void ReverbAlgorithm::reset()
 {
-    pitchShifter.reset();
     reverbEngine.reset();
     filterBank.reset();
     
@@ -89,14 +86,6 @@ void ReverbAlgorithm::setParameters(const Parameters& newParams)
     updateDSPParameters();
 }
 
-
-
-void ReverbAlgorithm::setPitchShift(float semitones)
-{
-    params.pitchShift = MathUtils::clamp(semitones, -24.0f, 24.0f);
-    pitchShifter.setPitchShift(params.pitchShift);
-}
-
 void ReverbAlgorithm::setRoomSize(float roomSizeM2)
 {
     params.roomSize = MathUtils::clamp(roomSizeM2, 10.0f, 10000.0f);
@@ -124,20 +113,18 @@ void ReverbAlgorithm::setStereoWidth(float stereoWidthPercent)
 float ReverbAlgorithm::getCpuUsage() const
 {
     // Простая оценка CPU usage на основе сложности алгоритмов
-    float pitchUsage = 0.3f;
     float reverbUsage = 0.4f;
     float filterUsage = 0.05f;
     
-    return pitchUsage + reverbUsage + filterUsage;
+    return reverbUsage + filterUsage;
 }
 
 float ReverbAlgorithm::getLatency() const
 {
     // Расчет общей задержки
-    float pitchLatency = 50.0f; // Примерная задержка pitch shifter
     float reverbLatency = 10.0f; // Минимальная задержка реверберации
     
-    return pitchLatency + reverbLatency;
+    return reverbLatency;
 }
 
 void ReverbAlgorithm::getSpectrum(float* spectrum, int numBins)
@@ -151,13 +138,6 @@ void ReverbAlgorithm::updateDSPParameters()
 {
     if (!isPrepared)
         return;
-    
-    // Обновление параметров pitch shifter
-    PitchShifter::Parameters pitchParams;
-    pitchParams.pitchShift = params.pitchShift;
-    pitchParams.formantPreservation = params.formantPreservation;
-    pitchParams.quality = params.quality;
-    pitchShifter.setParameters(pitchParams);
     
     // Обновление параметров reverb engine
     ReverbEngine::Parameters reverbParams;

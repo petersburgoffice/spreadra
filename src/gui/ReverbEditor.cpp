@@ -59,7 +59,10 @@ void ReverbEditor::paint(juce::Graphics& g)
     
     g.setColour(juce::Colours::white);
     g.setFont(juce::Font(juce::FontOptions().withHeight(24.0f)));
-    g.drawFittedText("Reverb Audio Plugin", getLocalBounds().removeFromTop(50), juce::Justification::centred, 1);
+    g.drawFittedText("REVERBIX", getLocalBounds().removeFromTop(50), juce::Justification::centred, 1);
+    
+    g.setFont(juce::Font(juce::FontOptions().withHeight(12.0f)));
+    g.drawFittedText("by SonicMakers", getLocalBounds().removeFromTop(50).translated(0, 30), juce::Justification::centred, 1);
     
     // Подписи под слайдерами
     g.setFont(juce::Font(juce::FontOptions().withHeight(12.0f)));

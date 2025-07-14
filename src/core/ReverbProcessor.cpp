@@ -10,8 +10,8 @@ ReverbProcessor::ReverbProcessor()
       parameters(*this, nullptr, juce::Identifier("ReverbParameters"), createParameterLayout())
 {
     // Инициализация файлового логгера
-    Logger::getInstance().initialize("Reverb");
-    SHIMMER_LOG_INFO("ReverbProcessor initialized");
+    Logger::getInstance().initialize("Reverbix");
+    SHIMMER_LOG_INFO("ReverbixProcessor initialized");
     
     // Инициализация параметров
     updateParameters();
@@ -19,7 +19,7 @@ ReverbProcessor::ReverbProcessor()
 
 ReverbProcessor::~ReverbProcessor()
 {
-    // SHIMMER_LOG_INFO("ReverbProcessor shutting down");
+    // SHIMMER_LOG_INFO("ReverbixProcessor shutting down");
     // Logger::getInstance().shutdown();
 }
 
@@ -35,7 +35,7 @@ void ReverbProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     // Обновление метрик
     latencyMs = reverbAlgorithm.getLatency();
     
-    // SHIMMER_LOG_INFO("Reverb ready: latency=" + juce::String(latencyMs, 2) + "ms");
+    // SHIMMER_LOG_INFO("Reverbix ready: latency=" + juce::String(latencyMs, 2) + "ms");
 }
 
 void ReverbProcessor::releaseResources()
@@ -177,7 +177,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReverbProcessor::createParam
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
-    // Reverb parameters
+    // Reverbix parameters
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         "roomSize", "Room Size", juce::NormalisableRange<float>(10.0f, 10000.0f, 10.0f), 5005.0f,
         juce::String(), juce::AudioProcessorParameter::genericParameter,
@@ -211,7 +211,7 @@ void ReverbProcessor::updateParameters()
     float dryWet = parameters.getRawParameterValue("dryWet")->load();
     float stereoWidth = parameters.getRawParameterValue("stereoWidth")->load();
     
-    // Обновление параметров reverb-ядра
+    // Обновление параметров reverbix-ядра
     reverbAlgorithm.setRoomSize(roomSize);
     reverbAlgorithm.setDecayTime(decayTime);
     reverbAlgorithm.setDryWet(dryWet);

@@ -35,7 +35,7 @@ public:
     // Параметры алгоритма
     struct Parameters
     {
-        // Reverb parameters
+        // Reverbix parameters
         float roomSize = 1000.0f;      // m², 10-10000
         float decayTime = 3.0f;        // seconds, 0.1-20
         float damping = 50.0f;         // %, 0-100

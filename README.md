@@ -1,6 +1,6 @@
-# Reverb Audio Plugin
+# Reverbix Audio Plugin
 
-A professional reverb audio plugin built with JUCE framework.
+A professional reverb audio plugin built with JUCE framework by SonicMakers.
 
 ## Features
 
@@ -51,7 +51,7 @@ The plugin automatically installs to `~/Library/Audio/Plug-Ins/Components/` afte
 
 **SonicMakers** - Professional Audio Plugin Development
 - Manufacturer Code: Snmk
-- Plugin Code: Revb
+- Plugin Code: Rvbx
 
 ## Version
 

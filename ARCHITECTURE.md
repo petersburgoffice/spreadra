@@ -1,8 +1,8 @@
-# Shimmer Plugin Architecture
+# Reverbix Plugin Architecture
 
 ## Обзор проекта
 
-Shimmer Plugin — это профессиональный аудио-плагин, реализующий эффект shimmer для трех основных форматов:
+Reverbix Plugin — это профессиональный аудио-плагин, реализующий высококачественную реверберацию для трех основных форматов:
 - **VST3** (Virtual Studio Technology 3) - для DAW на Windows, macOS, Linux
 - **AU** (Audio Unit) - для Logic Pro, GarageBand, других macOS приложений  
 - **AAX** (Avid Audio eXtension) - для Pro Tools

@@ -1,11 +1,11 @@
-# DSP Algorithms for Shimmer Effect
+# DSP Algorithms for Reverbix
 
 ## Обзор алгоритмов
 
-Shimmer-эффект основан на комбинации трех основных DSP алгоритмов:
-1. **Feedback Delay Network** - создает длительную петлю обратной связи
-2. **Phase Vocoder Pitch Shifting** - сдвигает высоту тона без изменения темпа
-3. **Schroeder's Reverb Algorithm** - создает пространственную реверберацию
+Reverbix основан на высококачественном алгоритме реверберации:
+1. **Schroeder's Reverb Algorithm** - создает пространственную реверберацию
+2. **Early Reflections Engine** - моделирует ранние отражения
+3. **Stereo Width Processing** - обеспечивает стерео расширение
 
 ## 1. Feedback Delay Network (FDN)
 

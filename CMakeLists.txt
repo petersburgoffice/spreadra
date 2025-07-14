@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(Reverb VERSION 0.1.0)
+project(Reverbix VERSION 0.1.0)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -38,21 +38,21 @@ file(GLOB_RECURSE SHIMMER_SOURCES
     src/gui/*.cpp src/gui/*.h
 )
 
-juce_add_plugin(Reverb
+juce_add_plugin(Reverbix
     COMPANY_NAME "SonicMakers"
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE
     NEEDS_MIDI_OUTPUT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     PLUGIN_MANUFACTURER_CODE Snmk
-    PLUGIN_CODE Revb
+    PLUGIN_CODE Rvbx
     FORMATS AU Standalone
-    PRODUCT_NAME "Reverb"
+    PRODUCT_NAME "Reverbix"
 )
 
-target_sources(Reverb PRIVATE ${SHIMMER_SOURCES})
+target_sources(Reverbix PRIVATE ${SHIMMER_SOURCES})
 
-target_link_libraries(Reverb PRIVATE
+target_link_libraries(Reverbix PRIVATE
     juce::juce_audio_utils
     juce::juce_audio_processors
     juce::juce_audio_plugin_client
@@ -74,11 +74,11 @@ if(APPLE)
     set(AU_INSTALL_DIR "$ENV{HOME}/Library/Audio/Plug-Ins/Components")
     
     # Добавляем команду копирования AU после сборки
-    add_custom_command(TARGET Reverb_AU POST_BUILD
+    add_custom_command(TARGET Reverbix_AU POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${AU_INSTALL_DIR}"
         COMMAND ${CMAKE_COMMAND} -E copy_directory 
-            "$<TARGET_BUNDLE_DIR:Reverb_AU>" 
-            "${AU_INSTALL_DIR}/Reverb.component"
+            "$<TARGET_BUNDLE_DIR:Reverbix_AU>" 
+            "${AU_INSTALL_DIR}/Reverbix.component"
         COMMENT "Installing AU plugin to ${AU_INSTALL_DIR}"
     )
     

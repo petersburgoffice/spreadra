@@ -139,7 +139,7 @@ void ReverbAlgorithm::updateDSPParameters()
     if (!isPrepared)
         return;
     
-    // Обновление параметров reverb engine
+    // Обновление параметров reverbix engine
     ReverbEngine::Parameters reverbParams;
     reverbParams.roomSize = params.roomSize;
     reverbParams.decayTime = params.decayTime;
@@ -170,7 +170,7 @@ void ReverbAlgorithm::processStereoInternal(const float* inputL, const float* in
         return;
     }
     
-    // Обрабатываем wet сигнал через ReverbEngine
+    // Обрабатываем wet сигнал через ReverbixEngine
     std::copy(inputL, inputL + numSamples, tempBufferL.data());
     std::copy(inputR, inputR + numSamples, tempBufferR.data());
     reverbEngine.processStereo(tempBufferL.data(), tempBufferR.data(), 

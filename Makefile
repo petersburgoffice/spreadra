@@ -1,4 +1,4 @@
-# Makefile для Reverb с автоматическим версионированием
+# Makefile для Reverbix с автоматическим версионированием
 
 .PHONY: all clean build install version
 
@@ -20,8 +20,8 @@ build:
 # Установить AU плагин
 install:
 	@echo "📦 Installing AU plugin..."
-	@rm -rf ~/Library/Audio/Plug-Ins/Components/Reverb.component
-	@cp -R build/Reverb_artefacts/AU/Reverb.component ~/Library/Audio/Plug-Ins/Components/
+	@rm -rf ~/Library/Audio/Plug-Ins/Components/Reverbix.component
+	@cp -R build/Reverbix_artefacts/AU/Reverbix.component ~/Library/Audio/Plug-Ins/Components/
 	@echo "✅ AU plugin installed!"
 	@echo "📋 Current version: v$(shell cat version.txt)"
 

@@ -179,12 +179,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReverbProcessor::createParam
     
     // Reverb parameters
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "roomSize", "Room Size", juce::NormalisableRange<float>(10.0f, 10000.0f, 10.0f), 1000.0f,
+        "roomSize", "Room Size", juce::NormalisableRange<float>(10.0f, 10000.0f, 10.0f), 5005.0f,
         juce::String(), juce::AudioProcessorParameter::genericParameter,
         [](float value, int) { return juce::String(value, 0) + " m²"; }));
     
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "decayTime", "Decay Time", juce::NormalisableRange<float>(0.1f, 20.0f, 0.1f), 3.0f,
+        "decayTime", "Decay Time", juce::NormalisableRange<float>(0.1f, 20.0f, 0.1f), 10.05f,
         juce::String(), juce::AudioProcessorParameter::genericParameter,
         [](float value, int) { return juce::String(value, 1) + " s"; }));
     

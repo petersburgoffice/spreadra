@@ -4,7 +4,7 @@
 ReverbEditor::ReverbEditor(ReverbProcessor& p)
     : AudioProcessorEditor(&p), processor(p)
 {
-    setSize(600, 520);
+    setSize(600, 400); // Уменьшаем высоту
     
     // Создание слайдеров для параметров
     addAndMakeVisible(roomSizeSlider);
@@ -12,26 +12,26 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     addAndMakeVisible(dryWetSlider);
     addAndMakeVisible(stereoWidthSlider);
     
-    // Настройка слайдеров
+    // Настройка слайдеров - убираем текстовые поля
     roomSizeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    roomSizeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    roomSizeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0); // Убираем текстовое поле
     roomSizeSlider.setRange(10.0, 10000.0, 10.0);
-    roomSizeSlider.setValue(1000.0);
+    roomSizeSlider.setValue(5005.0); // Середина диапазона для 12 часов
     
     decayTimeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    decayTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    decayTimeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0); // Убираем текстовое поле
     decayTimeSlider.setRange(0.1, 20.0, 0.1);
-    decayTimeSlider.setValue(3.0);
+    decayTimeSlider.setValue(10.05); // Середина диапазона для 12 часов
     
     dryWetSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    dryWetSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    dryWetSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0); // Убираем текстовое поле
     dryWetSlider.setRange(0.0, 100.0, 1.0);
-    dryWetSlider.setValue(50.0);
+    dryWetSlider.setValue(50.0); // Середина диапазона для 12 часов
     
     stereoWidthSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    stereoWidthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    stereoWidthSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0); // Убираем текстовое поле
     stereoWidthSlider.setRange(0.0, 200.0, 1.0);
-    stereoWidthSlider.setValue(100.0);
+    stereoWidthSlider.setValue(100.0); // Середина диапазона для 12 часов
     
     // Подключение к параметрам процессора
     roomSizeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -61,12 +61,12 @@ void ReverbEditor::paint(juce::Graphics& g)
     g.setFont(juce::Font(juce::FontOptions().withHeight(24.0f)));
     g.drawFittedText("Reverb Audio Plugin", getLocalBounds().removeFromTop(50), juce::Justification::centred, 1);
     
-    // Заголовки для слайдеров
-    g.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
-    g.drawText("Room Size", roomSizeSlider.getBounds().translated(0, -25), juce::Justification::centred);
-    g.drawText("Decay Time", decayTimeSlider.getBounds().translated(0, -25), juce::Justification::centred);
-    g.drawText("Dry/Wet", dryWetSlider.getBounds().translated(0, -25), juce::Justification::centred);
-    g.drawText("Stereo Width", stereoWidthSlider.getBounds().translated(0, -25), juce::Justification::centred);
+    // Подписи под слайдерами
+    g.setFont(juce::Font(juce::FontOptions().withHeight(12.0f)));
+    g.drawText("Room Size", roomSizeSlider.getBounds().translated(0, 80), juce::Justification::centred);
+    g.drawText("Decay Time", decayTimeSlider.getBounds().translated(0, 80), juce::Justification::centred);
+    g.drawText("Dry/Wet", dryWetSlider.getBounds().translated(0, 80), juce::Justification::centred);
+    g.drawText("Stereo Width", stereoWidthSlider.getBounds().translated(0, 80), juce::Justification::centred);
 }
 
 void ReverbEditor::resized()
@@ -74,26 +74,27 @@ void ReverbEditor::resized()
     auto bounds = getLocalBounds().reduced(20);
     bounds.removeFromTop(50); // Место для заголовка
     
-    const int sliderWidth = 100;
+    const int sliderWidth = 120;
     const int sliderHeight = 120;
-    const int spacing = 20;
+    const int spacing = 40;
     
-    // Расположение слайдеров в два ряда
-    auto topRow = bounds.removeFromTop(sliderHeight);
-    auto bottomRow = bounds.removeFromTop(sliderHeight);
+    // Размещаем все слайдеры в один горизонтальный ряд внизу
+    auto bottomRow = bounds.removeFromBottom(sliderHeight + 30); // +30 для подписей
     
-    // Первый ряд
-    roomSizeSlider.setBounds(topRow.removeFromLeft(sliderWidth));
-    topRow.removeFromLeft(spacing);
+    // Распределяем слайдеры равномерно по ширине
+    int totalWidth = sliderWidth * 4 + spacing * 3;
+    int startX = (bounds.getWidth() - totalWidth) / 2;
     
-    decayTimeSlider.setBounds(topRow.removeFromLeft(sliderWidth));
-    topRow.removeFromLeft(spacing);
+    roomSizeSlider.setBounds(startX, bottomRow.getY(), sliderWidth, sliderHeight);
+    startX += sliderWidth + spacing;
     
-    // Второй ряд
-    dryWetSlider.setBounds(bottomRow.removeFromLeft(sliderWidth));
-    bottomRow.removeFromLeft(spacing);
+    decayTimeSlider.setBounds(startX, bottomRow.getY(), sliderWidth, sliderHeight);
+    startX += sliderWidth + spacing;
     
-    stereoWidthSlider.setBounds(bottomRow.removeFromLeft(sliderWidth));
+    dryWetSlider.setBounds(startX, bottomRow.getY(), sliderWidth, sliderHeight);
+    startX += sliderWidth + spacing;
+    
+    stereoWidthSlider.setBounds(startX, bottomRow.getY(), sliderWidth, sliderHeight);
     
     // Размещение версии в правом нижнем углу
     versionLabel.setBounds(getWidth() - 80, getHeight() - 25, 70, 20);

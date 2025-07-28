@@ -10,65 +10,67 @@ void ModernKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
     auto radius = juce::jmin(width, height) / 2.0f - 4.0f;
     auto centreX = x + width * 0.5f;
     auto centreY = y + height * 0.5f;
+    auto rx = centreX - radius;
+    auto ry = centreY - radius;
+    auto rw = radius * 2.0f;
     auto angle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
 
     // Внешняя тень
-    g.setColour(juce::Colour(0x30000000));
-    g.fillEllipse(centreX - radius + 2, centreY - radius + 4, radius * 2.0f, radius * 2.0f);
+    g.setColour(juce::Colour(0x25000000));
+    g.fillEllipse(rx + 2, ry + 3, rw, rw);
 
-    // Основной круг с градиентом
-    juce::ColourGradient mainGradient(
-        juce::Colour(0xff4a4a4a), centreX, centreY - radius,
-        juce::Colour(0xff1a1a1a), centreX, centreY + radius, true);
-    mainGradient.addColour(0.3, juce::Colour(0xff3a3a3a));
-    mainGradient.addColour(0.7, juce::Colour(0xff2a2a2a));
-    g.setGradientFill(mainGradient);
-    g.fillEllipse(centreX - radius, centreY - radius, radius * 2.0f, radius * 2.0f);
+    // Основной корпус ручки
+    juce::ColourGradient knobGradient(
+        juce::Colour(0xff5a5a5a), centreX, ry,
+        juce::Colour(0xff2a2a2a), centreX, ry + rw, false);
+    knobGradient.addColour(0.3, juce::Colour(0xff4a4a4a));
+    knobGradient.addColour(0.7, juce::Colour(0xff353535));
+    g.setGradientFill(knobGradient);
+    g.fillEllipse(rx, ry, rw, rw);
 
-    // Внутренний круг (более светлый)
-    float innerRadius = radius * 0.85f;
+    // Внутренний ободок
+    auto innerRadius = radius * 0.9f;
+    auto innerRx = centreX - innerRadius;
+    auto innerRy = centreY - innerRadius;
+    auto innerRw = innerRadius * 2.0f;
+    
     juce::ColourGradient innerGradient(
-        juce::Colour(0xff6a6a6a), centreX, centreY - innerRadius * 0.8f,
-        juce::Colour(0xff2a2a2a), centreX, centreY + innerRadius, false);
-    innerGradient.addColour(0.4, juce::Colour(0xff4a4a4a));
+        juce::Colour(0xff6a6a6a), centreX, innerRy,
+        juce::Colour(0xff3a3a3a), centreX, innerRy + innerRw, false);
     g.setGradientFill(innerGradient);
-    g.fillEllipse(centreX - innerRadius, centreY - innerRadius, innerRadius * 2.0f, innerRadius * 2.0f);
+    g.fillEllipse(innerRx, innerRy, innerRw, innerRw);
 
     // Верхний блик
     g.setColour(juce::Colour(0x40ffffff));
-    g.fillEllipse(centreX - innerRadius * 0.7f, centreY - innerRadius * 0.7f, innerRadius * 1.4f, innerRadius * 0.5f);
+    auto glareRadius = radius * 0.6f;
+    g.fillEllipse(centreX - glareRadius, centreY - glareRadius * 1.2f, 
+                  glareRadius * 2.0f, glareRadius * 0.8f);
 
-    // Центральная впадина
-    float centerRadius = innerRadius * 0.25f;
-    juce::ColourGradient centerGradient(
-        juce::Colour(0xff3a3a3a), centreX, centreY - centerRadius,
-        juce::Colour(0xff1a1a1a), centreX, centreY + centerRadius, false);
-    g.setGradientFill(centerGradient);
-    g.fillEllipse(centreX - centerRadius, centreY - centerRadius, centerRadius * 2.0f, centerRadius * 2.0f);
+    // Центральная область
+    auto centerRadius = radius * 0.2f;
+    g.setColour(juce::Colour(0xff2a2a2a));
+    g.fillEllipse(centreX - centerRadius, centreY - centerRadius, 
+                  centerRadius * 2.0f, centerRadius * 2.0f);
 
     // Указатель
+    auto pointerLength = radius * 0.7f;
+    auto pointerThickness = 3.0f;
+    
+    g.setColour(juce::Colour(0xff000000));
+    g.drawLine(centreX + 1, centreY + 1,
+               centreX + (pointerLength + 1) * std::cos(angle - juce::MathConstants<float>::halfPi),
+               centreY + (pointerLength + 1) * std::sin(angle - juce::MathConstants<float>::halfPi),
+               pointerThickness);
+    
     g.setColour(juce::Colours::white);
-    float pointerLength = innerRadius * 0.7f;
-    float pointerThickness = 2.5f;
-    float startFrac = 0.2f;
-    
-    juce::Path pointerPath;
-    pointerPath.startNewSubPath(
-        centreX + innerRadius * startFrac * std::cos(angle - juce::MathConstants<float>::halfPi),
-        centreY + innerRadius * startFrac * std::sin(angle - juce::MathConstants<float>::halfPi));
-    pointerPath.lineTo(
-        centreX + pointerLength * std::cos(angle - juce::MathConstants<float>::halfPi),
-        centreY + pointerLength * std::sin(angle - juce::MathConstants<float>::halfPi));
-    
-    // Тень указателя
-    g.setColour(juce::Colour(0x40000000));
-    juce::Path shadowPath = pointerPath;
-    shadowPath.applyTransform(juce::AffineTransform::translation(1, 1));
-    g.strokePath(shadowPath, juce::PathStrokeType(pointerThickness, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-    
-    // Сам указатель
-    g.setColour(juce::Colours::white);
-    g.strokePath(pointerPath, juce::PathStrokeType(pointerThickness, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+    g.drawLine(centreX, centreY,
+               centreX + pointerLength * std::cos(angle - juce::MathConstants<float>::halfPi),
+               centreY + pointerLength * std::sin(angle - juce::MathConstants<float>::halfPi),
+               pointerThickness);
+
+    // Обводка
+    g.setColour(juce::Colour(0xff1a1a1a));
+    g.drawEllipse(rx, ry, rw, rw, 1.0f);
 }
 
 

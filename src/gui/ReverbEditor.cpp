@@ -112,8 +112,11 @@ void AnimatedSlider::paint(juce::Graphics& g)
         g.fillEllipse(bounds);
     }
     
-    // Рисуем слайдер
-    juce::Slider::paint(g);
+    // Рисуем слайдер через LookAndFeel
+    lookAndFeel.drawRotarySlider(g, 0, 0, getWidth(), getHeight(), 
+                                (float)getValue() / (getMaximum() - getMinimum()), 
+                                juce::MathConstants<float>::pi * 1.2f, 
+                                juce::MathConstants<float>::pi * 2.8f, *this);
 }
 
 void AnimatedSlider::resized()

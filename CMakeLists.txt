@@ -52,7 +52,13 @@ juce_add_plugin(Reverbix
 
 target_sources(Reverbix PRIVATE ${SHIMMER_SOURCES})
 
+# Add binary resources
+juce_add_binary_data(ReverbixData SOURCES
+    Resources/bg.png
+)
+
 target_link_libraries(Reverbix PRIVATE
+    ReverbixData
     juce::juce_audio_utils
     juce::juce_audio_processors
     juce::juce_audio_plugin_client

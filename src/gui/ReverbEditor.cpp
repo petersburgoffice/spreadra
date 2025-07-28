@@ -1,79 +1,78 @@
 #include "ReverbEditor.h"
 #include "../core/Version.h"
+#include "BinaryData.h"
 
-// ============================================================================
-// ModernKnobLookAndFeel Implementation
-// ============================================================================
-
-void ModernKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
+void CustomRotarySliderLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height,
+                                                     float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
+                                                     juce::Slider& slider)
 {
-    auto radius = juce::jmin(width, height) / 2.0f - 4.0f;
-    auto centreX = x + width * 0.5f;
-    auto centreY = y + height * 0.5f;
-    auto rx = centreX - radius;
-    auto ry = centreY - radius;
-    auto rw = radius * 2.0f;
-    auto angle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
+    auto bounds = juce::Rectangle<int>(x, y, width, height).toFloat().reduced(8);
+    auto radius = juce::jmin(bounds.getWidth(), bounds.getHeight()) / 2.0f;
+    auto toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+    auto lineW = juce::jmin(6.0f, radius * 0.4f);
+    auto arcRadius = radius - lineW * 0.5f;
 
-    // Внешняя тень
-    g.setColour(juce::Colour(0x25000000));
-    g.fillEllipse(rx + 2, ry + 3, rw, rw);
+    // Draw the background arc (full circle)
+    juce::Path backgroundArc;
+    backgroundArc.addCentredArc(bounds.getCentreX(),
+                               bounds.getCentreY(),
+                               arcRadius,
+                               arcRadius,
+                               0.0f,
+                               rotaryStartAngle,
+                               rotaryEndAngle,
+                               true);
 
-    // Основной корпус ручки
-    juce::ColourGradient knobGradient(
-        juce::Colour(0xff5a5a5a), centreX, ry,
-        juce::Colour(0xff2a2a2a), centreX, ry + rw, false);
-    knobGradient.addColour(0.3, juce::Colour(0xff4a4a4a));
-    knobGradient.addColour(0.7, juce::Colour(0xff353535));
-    g.setGradientFill(knobGradient);
-    g.fillEllipse(rx, ry, rw, rw);
-
-    // Внутренний ободок
-    auto innerRadius = radius * 0.9f;
-    auto innerRx = centreX - innerRadius;
-    auto innerRy = centreY - innerRadius;
-    auto innerRw = innerRadius * 2.0f;
-    
-    juce::ColourGradient innerGradient(
-        juce::Colour(0xff6a6a6a), centreX, innerRy,
-        juce::Colour(0xff3a3a3a), centreX, innerRy + innerRw, false);
-    g.setGradientFill(innerGradient);
-    g.fillEllipse(innerRx, innerRy, innerRw, innerRw);
-
-    // Верхний блик
-    g.setColour(juce::Colour(0x40ffffff));
-    auto glareRadius = radius * 0.6f;
-    g.fillEllipse(centreX - glareRadius, centreY - glareRadius * 1.2f, 
-                  glareRadius * 2.0f, glareRadius * 0.8f);
-
-    // Центральная область
-    auto centerRadius = radius * 0.2f;
     g.setColour(juce::Colour(0xff2a2a2a));
-    g.fillEllipse(centreX - centerRadius, centreY - centerRadius, 
-                  centerRadius * 2.0f, centerRadius * 2.0f);
+    g.strokePath(backgroundArc, juce::PathStrokeType(lineW, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 
-    // Указатель
-    auto pointerLength = radius * 0.7f;
-    auto pointerThickness = 3.0f;
-    
-    g.setColour(juce::Colour(0xff000000));
-    g.drawLine(centreX + 1, centreY + 1,
-               centreX + (pointerLength + 1) * std::cos(angle - juce::MathConstants<float>::halfPi),
-               centreY + (pointerLength + 1) * std::sin(angle - juce::MathConstants<float>::halfPi),
-               pointerThickness);
-    
-    g.setColour(juce::Colours::white);
-    g.drawLine(centreX, centreY,
-               centreX + pointerLength * std::cos(angle - juce::MathConstants<float>::halfPi),
-               centreY + pointerLength * std::sin(angle - juce::MathConstants<float>::halfPi),
-               pointerThickness);
+    // Draw the value arc
+    if (slider.isEnabled())
+    {
+        juce::Path valueArc;
+        valueArc.addCentredArc(bounds.getCentreX(),
+                              bounds.getCentreY(),
+                              arcRadius,
+                              arcRadius,
+                              0.0f,
+                              rotaryStartAngle,
+                              toAngle,
+                              true);
 
-    // Обводка
+        g.setColour(ringColour);
+        g.strokePath(valueArc, juce::PathStrokeType(lineW, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+    }
+
+    // Draw the knob with consistent size
+    auto knobRadius = radius - lineW * 1.8f;
+    auto knobBounds = juce::Rectangle<float>(knobRadius * 2.0f, knobRadius * 2.0f).withCentre(bounds.getCentre());
+    
+    // Knob shadow
+    auto shadowBounds = knobBounds.translated(1, 2);
+    g.setColour(juce::Colour(0x30000000));
+    g.fillEllipse(shadowBounds);
+    
+    // Knob gradient from light to dark (simulating light from top-left)
+    juce::ColourGradient knobGradient(juce::Colour(0xff4a4a4a), knobBounds.getTopLeft(),
+                                     juce::Colour(0xff2a2a2a), knobBounds.getBottomRight(), false);
+    g.setGradientFill(knobGradient);
+    g.fillEllipse(knobBounds);
+
+    // Knob border
     g.setColour(juce::Colour(0xff1a1a1a));
-    g.drawEllipse(rx, ry, rw, rw, 1.0f);
+    g.drawEllipse(knobBounds, 1.0f);
+
+    // Draw the pointer with consistent style
+    juce::Path pointer;
+    auto pointerLength = knobRadius * 0.7f;
+    auto pointerThickness = 2.0f;
+    pointer.addRectangle(-pointerThickness * 0.5f, -knobRadius + pointerLength * 0.4f, pointerThickness, pointerLength);
+    
+    pointer.applyTransform(juce::AffineTransform::rotation(toAngle).translated(bounds.getCentreX(), bounds.getCentreY()));
+    
+    g.setColour(ringColour.brighter(0.4f));
+    g.fillPath(pointer);
 }
-
-
 
 // ============================================================================
 // ReverbEditor Implementation
@@ -84,34 +83,67 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
 {
     setSize(800, 500);
     
-    // Настройка слайдеров
+    // Create custom look and feel objects with specific colors
+    roomSizeLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xff00BCD4)); // Cyan/Teal
+    decayTimeLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xffFF9800)); // Orange
+    dryWetLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xff2196F3)); // Blue
+    stereoWidthLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xffE0E0E0)); // Light Gray
+    
+    // Setup Room Size slider
     roomSizeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     roomSizeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     roomSizeSlider.setRange(10.0, 10000.0, 10.0);
     roomSizeSlider.setValue(5005.0);
-    roomSizeSlider.setLookAndFeel(&knobLookAndFeel);
+    roomSizeSlider.setLookAndFeel(roomSizeLookAndFeel.get());
     addAndMakeVisible(roomSizeSlider);
-    
+
+    roomSizeLabel.setText("ROOM SIZE", juce::dontSendNotification);
+    roomSizeLabel.setFont(juce::Font(14.0f, juce::Font::plain));
+    roomSizeLabel.setJustificationType(juce::Justification::centred);
+    roomSizeLabel.setColour(juce::Label::textColourId, juce::Colour(0xff00BCD4));
+    addAndMakeVisible(roomSizeLabel);
+
+    // Setup Decay Time slider
     decayTimeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     decayTimeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     decayTimeSlider.setRange(0.1, 20.0, 0.1);
     decayTimeSlider.setValue(10.05);
-    decayTimeSlider.setLookAndFeel(&knobLookAndFeel);
+    decayTimeSlider.setLookAndFeel(decayTimeLookAndFeel.get());
     addAndMakeVisible(decayTimeSlider);
-    
+
+    decayTimeLabel.setText("DECAY TIME", juce::dontSendNotification);
+    decayTimeLabel.setFont(juce::Font(14.0f, juce::Font::plain));
+    decayTimeLabel.setJustificationType(juce::Justification::centred);
+    decayTimeLabel.setColour(juce::Label::textColourId, juce::Colour(0xffFF9800));
+    addAndMakeVisible(decayTimeLabel);
+
+    // Setup Dry/Wet slider
     dryWetSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     dryWetSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     dryWetSlider.setRange(0.0, 100.0, 1.0);
     dryWetSlider.setValue(50.0);
-    dryWetSlider.setLookAndFeel(&knobLookAndFeel);
+    dryWetSlider.setLookAndFeel(dryWetLookAndFeel.get());
     addAndMakeVisible(dryWetSlider);
-    
+
+    dryWetLabel.setText("DRY/WET", juce::dontSendNotification);
+    dryWetLabel.setFont(juce::Font(14.0f, juce::Font::plain));
+    dryWetLabel.setJustificationType(juce::Justification::centred);
+    dryWetLabel.setColour(juce::Label::textColourId, juce::Colour(0xff2196F3));
+    addAndMakeVisible(dryWetLabel);
+
+    // Setup Stereo Width slider
     stereoWidthSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     stereoWidthSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     stereoWidthSlider.setRange(0.0, 200.0, 1.0);
     stereoWidthSlider.setValue(100.0);
-    stereoWidthSlider.setLookAndFeel(&knobLookAndFeel);
+    stereoWidthSlider.setLookAndFeel(stereoWidthLookAndFeel.get());
     addAndMakeVisible(stereoWidthSlider);
+
+    stereoWidthLabel.setText("STEREO WIDTH", juce::dontSendNotification);
+    stereoWidthLabel.setFont(juce::Font(14.0f, juce::Font::plain));
+    stereoWidthLabel.setJustificationType(juce::Justification::centred);
+    stereoWidthLabel.setColour(juce::Label::textColourId, juce::Colour(0xffE0E0E0));
+    addAndMakeVisible(stereoWidthLabel);
     
     // Подключение к параметрам процессора
     roomSizeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -130,42 +162,35 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     versionLabel.setColour(juce::Label::textColourId, juce::Colour(0x80FFFFFF));
     addAndMakeVisible(versionLabel);
     
-    // Настройка Labels для подписей слайдеров
-    roomSizeLabel.setText("Room Size", juce::dontSendNotification);
-    roomSizeLabel.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
-    roomSizeLabel.setJustificationType(juce::Justification::centred);
-    roomSizeLabel.setColour(juce::Label::textColourId, juce::Colour(0xffe0e0e0));
-    addAndMakeVisible(roomSizeLabel);
-    
-    decayTimeLabel.setText("Decay Time", juce::dontSendNotification);
-    decayTimeLabel.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
-    decayTimeLabel.setJustificationType(juce::Justification::centred);
-    decayTimeLabel.setColour(juce::Label::textColourId, juce::Colour(0xffe0e0e0));
-    addAndMakeVisible(decayTimeLabel);
-    
-    dryWetLabel.setText("Dry/Wet", juce::dontSendNotification);
-    dryWetLabel.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
-    dryWetLabel.setJustificationType(juce::Justification::centred);
-    dryWetLabel.setColour(juce::Label::textColourId, juce::Colour(0xffe0e0e0));
-    addAndMakeVisible(dryWetLabel);
-    
-    stereoWidthLabel.setText("Stereo Width", juce::dontSendNotification);
-    stereoWidthLabel.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
-    stereoWidthLabel.setJustificationType(juce::Justification::centred);
-    stereoWidthLabel.setColour(juce::Label::textColourId, juce::Colour(0xffe0e0e0));
-    addAndMakeVisible(stereoWidthLabel);
+    // Загрузка фонового изображения из binary resources
+    backgroundImage = juce::ImageCache::getFromMemory(BinaryData::bg_png, BinaryData::bg_pngSize);
 }
 
-ReverbEditor::~ReverbEditor() = default;
+ReverbEditor::~ReverbEditor()
+{
+    roomSizeSlider.setLookAndFeel(nullptr);
+    decayTimeSlider.setLookAndFeel(nullptr);
+    dryWetSlider.setLookAndFeel(nullptr);
+    stereoWidthSlider.setLookAndFeel(nullptr);
+}
 
 void ReverbEditor::paint(juce::Graphics& g)
 {
-    // Основной фон с градиентом
-    juce::ColourGradient bgGradient(
-        juce::Colour(0xff1a1a1a), 0, 0,
-        juce::Colour(0xff0a0a0a), 0, (float)getHeight(), false);
-    g.setGradientFill(bgGradient);
-    g.fillAll();
+    // Отрисовка фонового изображения
+    if (backgroundImage.isValid())
+    {
+        g.drawImage(backgroundImage, getLocalBounds().toFloat(), 
+                   juce::RectanglePlacement::fillDestination);
+    }
+    else
+    {
+        // Резервный градиентный фон, если изображение не загружено
+        juce::ColourGradient bgGradient(
+            juce::Colour(0xff1a1a1a), 0, 0,
+            juce::Colour(0xff0a0a0a), 0, (float)getHeight(), false);
+        g.setGradientFill(bgGradient);
+        g.fillAll();
+    }
 
     // Верхняя панель с градиентом
     auto topPanel = getLocalBounds().removeFromTop(120).toFloat();

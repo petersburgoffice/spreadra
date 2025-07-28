@@ -5,9 +5,17 @@
 #include "../core/ReverbProcessor.h"
 #include <juce_gui_extra/juce_gui_extra.h>
 
-class ModernKnobLookAndFeel : public juce::LookAndFeel_V4 {
+class CustomRotarySliderLookAndFeel : public juce::LookAndFeel_V4
+{
 public:
-    void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider) override;
+    CustomRotarySliderLookAndFeel(juce::Colour ringColour) : ringColour(ringColour) {}
+    
+    void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height,
+                         float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
+                         juce::Slider& slider) override;
+
+private:
+    juce::Colour ringColour;
 };
 
 class ReverbEditor : public juce::AudioProcessorEditor
@@ -43,8 +51,14 @@ private:
     juce::Label dryWetLabel;
     juce::Label stereoWidthLabel;
     
-    // LookAndFeel
-    ModernKnobLookAndFeel knobLookAndFeel;
+    // Custom look and feel objects с разными цветами
+    std::unique_ptr<CustomRotarySliderLookAndFeel> roomSizeLookAndFeel;
+    std::unique_ptr<CustomRotarySliderLookAndFeel> decayTimeLookAndFeel;
+    std::unique_ptr<CustomRotarySliderLookAndFeel> dryWetLookAndFeel;
+    std::unique_ptr<CustomRotarySliderLookAndFeel> stereoWidthLookAndFeel;
+    
+    // Фоновое изображение
+    juce::Image backgroundImage;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReverbEditor)
 }; 

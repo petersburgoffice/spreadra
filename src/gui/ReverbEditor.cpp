@@ -191,61 +191,16 @@ void ReverbEditor::paint(juce::Graphics& g)
         g.setGradientFill(bgGradient);
         g.fillAll();
     }
-
-    // Верхняя панель с градиентом
-    auto topPanel = getLocalBounds().removeFromTop(120).toFloat();
-    juce::ColourGradient topGradient(
-        juce::Colour(0xff2a2a2a), topPanel.getX(), topPanel.getY(),
-        juce::Colour(0xff1a1a1a), topPanel.getX(), topPanel.getBottom(), false);
-    g.setGradientFill(topGradient);
-    g.fillRoundedRectangle(topPanel, 8.0f);
-
-    // Логотип - современный шестиугольник
-    juce::Path hex;
-    float logoX = 60.0f, logoY = 60.0f, logoR = 30.0f;
-    for (int i = 0; i < 6; ++i) {
-        float angle = juce::MathConstants<float>::twoPi * i / 6.0f - juce::MathConstants<float>::halfPi;
-        float px = logoX + logoR * std::cos(angle);
-        float py = logoY + logoR * std::sin(angle);
-        if (i == 0) hex.startNewSubPath(px, py);
-        else hex.lineTo(px, py);
-    }
-    hex.closeSubPath();
-    
-    // Градиент для логотипа
-    juce::ColourGradient logoGradient(
-        juce::Colour(0xffffffff), logoX - logoR, logoY - logoR,
-        juce::Colour(0xffe0e0e0), logoX + logoR, logoY + logoR, false);
-    g.setGradientFill(logoGradient);
-    g.fillPath(hex);
-    
-    // Обводка логотипа
-    g.setColour(juce::Colour(0xffd0d0d0));
-    g.strokePath(hex, juce::PathStrokeType(2.0f));
-
-    // Текст Reverbix с современной типографикой
-    g.setFont(juce::Font(juce::FontOptions().withHeight(42.0f)));
-    juce::ColourGradient textGradient(
-        juce::Colour(0xffffffff), 110, 30,
-        juce::Colour(0xffe0e0e0), 110, 80, false);
-    g.setGradientFill(textGradient);
-    g.drawFittedText("Reverbix", 110, 30, 250, 60, juce::Justification::left, 1);
-
-    // Подзаголовок
-    g.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
-    g.setColour(juce::Colour(0xffa0a0a0));
-    g.drawFittedText("Professional Reverb", 110, 85, 250, 20, juce::Justification::left, 1);
 }
 
 void ReverbEditor::resized()
 {
-    auto bounds = getLocalBounds().reduced(40, 160);
-    bounds.removeFromTop(20);
+    auto bounds = getLocalBounds().reduced(40, 40);
 
     const int sliderWidth = 120;
     const int sliderHeight = 120;
     const int spacing = (bounds.getWidth() - sliderWidth * 4) / 3;
-    int y = bounds.getY() + 20;
+    int y = bounds.getY() + (bounds.getHeight() - sliderHeight - 40) / 2; // Центрируем по вертикали
     int x = bounds.getX();
 
     roomSizeSlider.setBounds(x, y, sliderWidth, sliderHeight);

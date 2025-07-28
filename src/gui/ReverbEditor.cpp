@@ -1,10 +1,58 @@
 #include "ReverbEditor.h"
 #include "../core/Version.h"
 
+void KnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
+{
+    auto radius = juce::jmin(width, height) / 2.0f - 4.0f;
+    auto centreX = x + width * 0.5f;
+    auto centreY = y + height * 0.5f;
+    auto angle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
+
+    // Тень
+    g.setColour(juce::Colour(0x33000000));
+    g.fillEllipse(centreX - radius + 6, centreY - radius + 12, radius * 2.0f, radius * 1.2f);
+
+    // RIM (внешний ободок)
+    juce::ColourGradient rimGradient(
+        juce::Colour(0xfff5f5f5), centreX, centreY - radius,
+        juce::Colour(0xff232323), centreX, centreY + radius, true);
+    rimGradient.addColour(0.7, juce::Colour(0xff232323));
+    rimGradient.addColour(0.95, juce::Colour(0xfff5f5f5).withAlpha(0.7f));
+    g.setGradientFill(rimGradient);
+    g.fillEllipse(centreX - radius, centreY - radius, radius * 2.0f, radius * 2.0f);
+
+    // Корпус (объём)
+    float bodyR = radius * 0.88f;
+    juce::ColourGradient bodyGradient(
+        juce::Colour(0xff444444), centreX, centreY - bodyR * 0.7f,
+        juce::Colour(0xff111111), centreX, centreY + bodyR, false);
+    g.setGradientFill(bodyGradient);
+    g.fillEllipse(centreX - bodyR, centreY - bodyR, bodyR * 2.0f, bodyR * 2.0f);
+
+    // Глянец (gloss)
+    g.setColour(juce::Colour(0x99ffffff));
+    g.fillEllipse(centreX - bodyR * 0.7f, centreY - bodyR * 0.7f, bodyR * 1.4f, bodyR * 0.7f);
+
+    // Метка (тонкая, длинная, не из центра)
+    g.setColour(juce::Colours::white);
+    float pointerLength = bodyR * 0.85f;
+    float pointerThickness = 2.0f;
+    float startFrac = 0.35f; // не из центра!
+    juce::Path p;
+    p.startNewSubPath(
+        centreX + bodyR * startFrac * std::cos(angle - juce::MathConstants<float>::halfPi),
+        centreY + bodyR * startFrac * std::sin(angle - juce::MathConstants<float>::halfPi));
+    p.lineTo(
+        centreX + pointerLength * std::cos(angle - juce::MathConstants<float>::halfPi),
+        centreY + pointerLength * std::sin(angle - juce::MathConstants<float>::halfPi));
+    g.strokePath(p, juce::PathStrokeType(pointerThickness, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+}
+
 ReverbEditor::ReverbEditor(ReverbProcessor& p)
     : AudioProcessorEditor(&p), processor(p)
 {
-    setSize(600, 400); // Уменьшаем высоту
+    setSize(700, 340); // Ближе к референсу
+    setLookAndFeel(&knobLookAndFeel);
     
     // Создание слайдеров для параметров
     addAndMakeVisible(roomSizeSlider);
@@ -17,21 +65,25 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     roomSizeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0); // Убираем текстовое поле
     roomSizeSlider.setRange(10.0, 10000.0, 10.0);
     roomSizeSlider.setValue(5005.0); // Середина диапазона для 12 часов
+    roomSizeSlider.setLookAndFeel(&knobLookAndFeel);
     
     decayTimeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     decayTimeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0); // Убираем текстовое поле
     decayTimeSlider.setRange(0.1, 20.0, 0.1);
     decayTimeSlider.setValue(10.05); // Середина диапазона для 12 часов
+    decayTimeSlider.setLookAndFeel(&knobLookAndFeel);
     
     dryWetSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     dryWetSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0); // Убираем текстовое поле
     dryWetSlider.setRange(0.0, 100.0, 1.0);
     dryWetSlider.setValue(50.0); // Середина диапазона для 12 часов
+    dryWetSlider.setLookAndFeel(&knobLookAndFeel);
     
     stereoWidthSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     stereoWidthSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0); // Убираем текстовое поле
     stereoWidthSlider.setRange(0.0, 200.0, 1.0);
     stereoWidthSlider.setValue(100.0); // Середина диапазона для 12 часов
+    stereoWidthSlider.setLookAndFeel(&knobLookAndFeel);
     
     // Подключение к параметрам процессора
     roomSizeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -55,50 +107,61 @@ ReverbEditor::~ReverbEditor() = default;
 
 void ReverbEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colour(0xff1e1e1e));
-    
+    // Градиентный фон
+    juce::ColourGradient bgGradient(juce::Colour(0xff3a3a3a), 0, 0, juce::Colour(0xff232323), 0, (float)getHeight(), false);
+    g.setGradientFill(bgGradient);
+    g.fillRoundedRectangle(getLocalBounds().toFloat(), 32.0f);
+
+    // Логотип (placeholder: шестиугольник)
+    juce::Path hex;
+    float logoX = 36.0f, logoY = 36.0f, logoR = 22.0f;
+    for (int i = 0; i < 6; ++i) {
+        float angle = juce::MathConstants<float>::twoPi * i / 6.0f - juce::MathConstants<float>::halfPi;
+        float px = logoX + logoR * std::cos(angle);
+        float py = logoY + logoR * std::sin(angle);
+        if (i == 0) hex.startNewSubPath(px, py);
+        else hex.lineTo(px, py);
+    }
+    hex.closeSubPath();
     g.setColour(juce::Colours::white);
-    g.setFont(juce::Font(juce::FontOptions().withHeight(24.0f)));
-    g.drawFittedText("REVERBIX", getLocalBounds().removeFromTop(50), juce::Justification::centred, 1);
-    
-    g.setFont(juce::Font(juce::FontOptions().withHeight(12.0f)));
-    g.drawFittedText("by SonicMakers", getLocalBounds().removeFromTop(50).translated(0, 30), juce::Justification::centred, 1);
-    
-    // Подписи под слайдерами
-    g.setFont(juce::Font(juce::FontOptions().withHeight(12.0f)));
-    g.drawText("Room Size", roomSizeSlider.getBounds().translated(0, 80), juce::Justification::centred);
-    g.drawText("Decay Time", decayTimeSlider.getBounds().translated(0, 80), juce::Justification::centred);
-    g.drawText("Dry/Wet", dryWetSlider.getBounds().translated(0, 80), juce::Justification::centred);
-    g.drawText("Stereo Width", stereoWidthSlider.getBounds().translated(0, 80), juce::Justification::centred);
+    g.strokePath(hex, juce::PathStrokeType(3.0f));
+
+    // Текст Reverbix
+    g.setFont(juce::Font(juce::FontOptions().withHeight(36.0f)));
+    g.drawFittedText("Reverbix", 70, 18, 220, 48, juce::Justification::left, 1);
+
+    // Подписи под ручками
+    g.setFont(juce::Font(juce::FontOptions().withHeight(18.0f)));
+    g.setColour(juce::Colours::white);
+    auto r1 = roomSizeSlider.getBounds();
+    auto r2 = decayTimeSlider.getBounds();
+    auto r3 = stereoWidthSlider.getBounds();
+    auto r4 = dryWetSlider.getBounds();
+    g.drawFittedText("Room size", r1.getX(), r1.getBottom() + 10, r1.getWidth(), 28, juce::Justification::centred, 1);
+    g.drawFittedText("Decay time", r2.getX(), r2.getBottom() + 10, r2.getWidth(), 28, juce::Justification::centred, 1);
+    g.drawFittedText("Stereo Width", r3.getX(), r3.getBottom() + 10, r3.getWidth(), 28, juce::Justification::centred, 1);
+    g.drawFittedText("Dry/Wet", r4.getX(), r4.getBottom() + 10, r4.getWidth(), 28, juce::Justification::centred, 1);
 }
 
 void ReverbEditor::resized()
 {
-    auto bounds = getLocalBounds().reduced(20);
-    bounds.removeFromTop(50); // Место для заголовка
-    
+    auto bounds = getLocalBounds().reduced(36);
+    bounds.removeFromTop(60); // Место для заголовка и логотипа
+
     const int sliderWidth = 120;
     const int sliderHeight = 120;
-    const int spacing = 40;
-    
-    // Размещаем все слайдеры в один горизонтальный ряд внизу
-    auto bottomRow = bounds.removeFromBottom(sliderHeight + 30); // +30 для подписей
-    
-    // Распределяем слайдеры равномерно по ширине
-    int totalWidth = sliderWidth * 4 + spacing * 3;
-    int startX = (bounds.getWidth() - totalWidth) / 2;
-    
-    roomSizeSlider.setBounds(startX, bottomRow.getY(), sliderWidth, sliderHeight);
-    startX += sliderWidth + spacing;
-    
-    decayTimeSlider.setBounds(startX, bottomRow.getY(), sliderWidth, sliderHeight);
-    startX += sliderWidth + spacing;
-    
-    dryWetSlider.setBounds(startX, bottomRow.getY(), sliderWidth, sliderHeight);
-    startX += sliderWidth + spacing;
-    
-    stereoWidthSlider.setBounds(startX, bottomRow.getY(), sliderWidth, sliderHeight);
-    
-    // Размещение версии в правом нижнем углу
+    const int spacing = (bounds.getWidth() - sliderWidth * 4) / 3;
+    int y = bounds.getY() + 20;
+    int x = bounds.getX();
+
+    roomSizeSlider.setBounds(x, y, sliderWidth, sliderHeight);
+    x += sliderWidth + spacing;
+    decayTimeSlider.setBounds(x, y, sliderWidth, sliderHeight);
+    x += sliderWidth + spacing;
+    stereoWidthSlider.setBounds(x, y, sliderWidth, sliderHeight);
+    x += sliderWidth + spacing;
+    dryWetSlider.setBounds(x, y, sliderWidth, sliderHeight);
+
+    // Версия — в правом нижнем углу
     versionLabel.setBounds(getWidth() - 80, getHeight() - 25, 70, 20);
 } 

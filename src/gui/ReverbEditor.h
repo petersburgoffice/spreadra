@@ -58,6 +58,12 @@ private:
     // Label для отображения версии
     juce::Label versionLabel;
     
+    // Labels для подписей слайдеров
+    juce::Label roomSizeLabel;
+    juce::Label decayTimeLabel;
+    juce::Label dryWetLabel;
+    juce::Label stereoWidthLabel;
+    
     // Анимационные переменные
     float backgroundPhase = 0.0f;
     float logoGlow = 0.0f;

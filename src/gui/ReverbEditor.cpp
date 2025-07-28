@@ -185,6 +185,31 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     versionLabel.setColour(juce::Label::textColourId, juce::Colour(0x80FFFFFF));
     addAndMakeVisible(versionLabel);
     
+    // Настройка Labels для подписей слайдеров
+    roomSizeLabel.setText("Room Size", juce::dontSendNotification);
+    roomSizeLabel.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
+    roomSizeLabel.setJustificationType(juce::Justification::centred);
+    roomSizeLabel.setColour(juce::Label::textColourId, juce::Colour(0xffe0e0e0));
+    addAndMakeVisible(roomSizeLabel);
+    
+    decayTimeLabel.setText("Decay Time", juce::dontSendNotification);
+    decayTimeLabel.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
+    decayTimeLabel.setJustificationType(juce::Justification::centred);
+    decayTimeLabel.setColour(juce::Label::textColourId, juce::Colour(0xffe0e0e0));
+    addAndMakeVisible(decayTimeLabel);
+    
+    dryWetLabel.setText("Dry/Wet", juce::dontSendNotification);
+    dryWetLabel.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
+    dryWetLabel.setJustificationType(juce::Justification::centred);
+    dryWetLabel.setColour(juce::Label::textColourId, juce::Colour(0xffe0e0e0));
+    addAndMakeVisible(dryWetLabel);
+    
+    stereoWidthLabel.setText("Stereo Width", juce::dontSendNotification);
+    stereoWidthLabel.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
+    stereoWidthLabel.setJustificationType(juce::Justification::centred);
+    stereoWidthLabel.setColour(juce::Label::textColourId, juce::Colour(0xffe0e0e0));
+    addAndMakeVisible(stereoWidthLabel);
+    
     // Запуск анимации
     startTimerHz(30);
 }
@@ -265,40 +290,6 @@ void ReverbEditor::paint(juce::Graphics& g)
     // Верхний блик панели
     g.setColour(juce::Colour(0x15ffffff));
     g.fillRoundedRectangle(mainPanel.removeFromBottom(mainPanel.getHeight() * 0.5f), 10.0f);
-
-    // Красивые подписи к слайдерам
-    g.setFont(juce::Font(juce::FontOptions().withHeight(16.0f)));
-    g.setColour(juce::Colour(0xffe0e0e0));
-    
-    auto r1 = roomSizeSlider.getBounds();
-    auto r2 = decayTimeSlider.getBounds();
-    auto r3 = stereoWidthSlider.getBounds();
-    auto r4 = dryWetSlider.getBounds();
-    
-    // Подписи с градиентом
-    juce::ColourGradient labelGradient(
-        juce::Colour(0xffffffff), r1.getX(), r1.getBottom() + 12,
-        juce::Colour(0xffc0c0c0), r1.getX(), r1.getBottom() + 36, false);
-    g.setGradientFill(labelGradient);
-    g.drawFittedText("Room Size", r1.getX(), r1.getBottom() + 12, r1.getWidth(), 24, juce::Justification::centred, 1);
-    
-    labelGradient = juce::ColourGradient(
-        juce::Colour(0xffffffff), r2.getX(), r2.getBottom() + 12,
-        juce::Colour(0xffc0c0c0), r2.getX(), r2.getBottom() + 36, false);
-    g.setGradientFill(labelGradient);
-    g.drawFittedText("Decay Time", r2.getX(), r2.getBottom() + 12, r2.getWidth(), 24, juce::Justification::centred, 1);
-    
-    labelGradient = juce::ColourGradient(
-        juce::Colour(0xffffffff), r3.getX(), r3.getBottom() + 12,
-        juce::Colour(0xffc0c0c0), r3.getX(), r3.getBottom() + 36, false);
-    g.setGradientFill(labelGradient);
-    g.drawFittedText("Stereo Width", r3.getX(), r3.getBottom() + 12, r3.getWidth(), 24, juce::Justification::centred, 1);
-    
-    labelGradient = juce::ColourGradient(
-        juce::Colour(0xffffffff), r4.getX(), r4.getBottom() + 12,
-        juce::Colour(0xffc0c0c0), r4.getX(), r4.getBottom() + 36, false);
-    g.setGradientFill(labelGradient);
-    g.drawFittedText("Dry/Wet", r4.getX(), r4.getBottom() + 12, r4.getWidth(), 24, juce::Justification::centred, 1);
 }
 
 void ReverbEditor::resized()
@@ -306,19 +297,26 @@ void ReverbEditor::resized()
     auto bounds = getLocalBounds().reduced(40, 160);
     bounds.removeFromTop(20);
 
-    const int sliderWidth = 140;
-    const int sliderHeight = 140;
+    const int sliderWidth = 120;
+    const int sliderHeight = 120;
     const int spacing = (bounds.getWidth() - sliderWidth * 4) / 3;
     int y = bounds.getY() + 20;
     int x = bounds.getX();
 
     roomSizeSlider.setBounds(x, y, sliderWidth, sliderHeight);
+    roomSizeLabel.setBounds(x, y + sliderHeight + 5, sliderWidth, 20);
     x += sliderWidth + spacing;
+    
     decayTimeSlider.setBounds(x, y, sliderWidth, sliderHeight);
+    decayTimeLabel.setBounds(x, y + sliderHeight + 5, sliderWidth, 20);
     x += sliderWidth + spacing;
+    
     stereoWidthSlider.setBounds(x, y, sliderWidth, sliderHeight);
+    stereoWidthLabel.setBounds(x, y + sliderHeight + 5, sliderWidth, 20);
     x += sliderWidth + spacing;
+    
     dryWetSlider.setBounds(x, y, sliderWidth, sliderHeight);
+    dryWetLabel.setBounds(x, y + sliderHeight + 5, sliderWidth, 20);
 
     // Версия — в правом нижнем углу
     versionLabel.setBounds(getWidth() - 80, getHeight() - 25, 70, 20);

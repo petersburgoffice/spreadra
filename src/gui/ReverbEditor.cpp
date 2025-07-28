@@ -71,104 +71,44 @@ void ModernKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
     g.strokePath(pointerPath, juce::PathStrokeType(pointerThickness, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 }
 
-void ModernKnobLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
-{
-    g.setColour(juce::Colour(0xffe0e0e0));
-    g.setFont(juce::Font(juce::FontOptions().withHeight(12.0f)));
-    g.drawFittedText(label.getText(), label.getLocalBounds(), juce::Justification::centred, 1);
-}
 
-// ============================================================================
-// AnimatedSlider Implementation
-// ============================================================================
-
-AnimatedSlider::AnimatedSlider(const juce::String& labelText)
-    : label(labelText)
-{
-    setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    setLookAndFeel(&lookAndFeel);
-    
-    addAndMakeVisible(valueLabel);
-    valueLabel.setJustificationType(juce::Justification::centred);
-    valueLabel.setColour(juce::Label::textColourId, juce::Colour(0xffe0e0e0));
-    valueLabel.setFont(juce::Font(juce::FontOptions().withHeight(10.0f)));
-    
-    startTimerHz(30);
-}
-
-AnimatedSlider::~AnimatedSlider()
-{
-    stopTimer();
-}
-
-void AnimatedSlider::paint(juce::Graphics& g)
-{
-    // Рисуем свечение если активен
-    if (glowIntensity > 0.0f)
-    {
-        auto bounds = getLocalBounds().toFloat();
-        g.setColour(juce::Colour::fromFloatRGBA(1.0f, 1.0f, 1.0f, glowIntensity * 0.3f));
-        g.fillEllipse(bounds);
-    }
-    
-    // Рисуем слайдер через LookAndFeel
-    lookAndFeel.drawRotarySlider(g, 0, 0, getWidth(), getHeight(), 
-                                (float)getValue() / (getMaximum() - getMinimum()), 
-                                juce::MathConstants<float>::pi * 1.2f, 
-                                juce::MathConstants<float>::pi * 2.8f, *this);
-}
-
-void AnimatedSlider::resized()
-{
-    auto bounds = getLocalBounds();
-    auto knobBounds = bounds.removeFromTop(bounds.getHeight() * 0.8f);
-    juce::Slider::setBounds(knobBounds);
-    
-    valueLabel.setBounds(bounds);
-}
-
-void AnimatedSlider::timerCallback()
-{
-    animationPhase += 0.1f;
-    if (animationPhase > juce::MathConstants<float>::twoPi)
-        animationPhase -= juce::MathConstants<float>::twoPi;
-    
-    // Плавное изменение свечения
-    glowIntensity = 0.5f + 0.3f * std::sin(animationPhase);
-    repaint();
-}
 
 // ============================================================================
 // ReverbEditor Implementation
 // ============================================================================
 
 ReverbEditor::ReverbEditor(ReverbProcessor& p)
-    : AudioProcessorEditor(&p), processor(p),
-      roomSizeSlider("Room Size"),
-      decayTimeSlider("Decay Time"),
-      dryWetSlider("Dry/Wet"),
-      stereoWidthSlider("Stereo Width")
+    : AudioProcessorEditor(&p), processor(p)
 {
     setSize(800, 500);
     
-    // Настройка диапазонов
+    // Настройка слайдеров
+    roomSizeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    roomSizeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     roomSizeSlider.setRange(10.0, 10000.0, 10.0);
     roomSizeSlider.setValue(5005.0);
+    roomSizeSlider.setLookAndFeel(&knobLookAndFeel);
+    addAndMakeVisible(roomSizeSlider);
     
+    decayTimeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    decayTimeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     decayTimeSlider.setRange(0.1, 20.0, 0.1);
     decayTimeSlider.setValue(10.05);
+    decayTimeSlider.setLookAndFeel(&knobLookAndFeel);
+    addAndMakeVisible(decayTimeSlider);
     
+    dryWetSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    dryWetSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     dryWetSlider.setRange(0.0, 100.0, 1.0);
     dryWetSlider.setValue(50.0);
+    dryWetSlider.setLookAndFeel(&knobLookAndFeel);
+    addAndMakeVisible(dryWetSlider);
     
+    stereoWidthSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    stereoWidthSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     stereoWidthSlider.setRange(0.0, 200.0, 1.0);
     stereoWidthSlider.setValue(100.0);
-    
-    // Добавление слайдеров
-    addAndMakeVisible(roomSizeSlider);
-    addAndMakeVisible(decayTimeSlider);
-    addAndMakeVisible(dryWetSlider);
+    stereoWidthSlider.setLookAndFeel(&knobLookAndFeel);
     addAndMakeVisible(stereoWidthSlider);
     
     // Подключение к параметрам процессора
@@ -212,23 +152,16 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     stereoWidthLabel.setJustificationType(juce::Justification::centred);
     stereoWidthLabel.setColour(juce::Label::textColourId, juce::Colour(0xffe0e0e0));
     addAndMakeVisible(stereoWidthLabel);
-    
-    // Запуск анимации
-    startTimerHz(30);
 }
 
-ReverbEditor::~ReverbEditor()
-{
-    stopTimer();
-}
+ReverbEditor::~ReverbEditor() = default;
 
 void ReverbEditor::paint(juce::Graphics& g)
 {
-    // Основной фон с анимированным градиентом
+    // Основной фон с градиентом
     juce::ColourGradient bgGradient(
         juce::Colour(0xff1a1a1a), 0, 0,
         juce::Colour(0xff0a0a0a), 0, (float)getHeight(), false);
-    bgGradient.addColour(0.5f + 0.1f * std::sin(backgroundPhase), juce::Colour(0xff151515));
     g.setGradientFill(bgGradient);
     g.fillAll();
 
@@ -240,9 +173,9 @@ void ReverbEditor::paint(juce::Graphics& g)
     g.setGradientFill(topGradient);
     g.fillRoundedRectangle(topPanel, 8.0f);
 
-    // Логотип - современный шестиугольник с анимацией
+    // Логотип - современный шестиугольник
     juce::Path hex;
-    float logoX = 60.0f, logoY = 60.0f, logoR = 30.0f + 2.0f * std::sin(logoGlow);
+    float logoX = 60.0f, logoY = 60.0f, logoR = 30.0f;
     for (int i = 0; i < 6; ++i) {
         float angle = juce::MathConstants<float>::twoPi * i / 6.0f - juce::MathConstants<float>::halfPi;
         float px = logoX + logoR * std::cos(angle);
@@ -252,16 +185,15 @@ void ReverbEditor::paint(juce::Graphics& g)
     }
     hex.closeSubPath();
     
-    // Градиент для логотипа с анимацией
+    // Градиент для логотипа
     juce::ColourGradient logoGradient(
         juce::Colour(0xffffffff), logoX - logoR, logoY - logoR,
         juce::Colour(0xffe0e0e0), logoX + logoR, logoY + logoR, false);
-    logoGradient.addColour(0.5f, juce::Colour(0xfff0f0f0));
     g.setGradientFill(logoGradient);
     g.fillPath(hex);
     
-    // Обводка логотипа с свечением
-    g.setColour(juce::Colour(0xffd0d0d0).withAlpha(0.8f + 0.2f * std::sin(logoGlow)));
+    // Обводка логотипа
+    g.setColour(juce::Colour(0xffd0d0d0));
     g.strokePath(hex, juce::PathStrokeType(2.0f));
 
     // Текст Reverbix с современной типографикой
@@ -276,23 +208,6 @@ void ReverbEditor::paint(juce::Graphics& g)
     g.setFont(juce::Font(juce::FontOptions().withHeight(14.0f)));
     g.setColour(juce::Colour(0xffa0a0a0));
     g.drawFittedText("Professional Reverb", 110, 85, 250, 20, juce::Justification::left, 1);
-
-    // Основная панель для слайдеров с анимацией
-    auto mainPanel = getLocalBounds().reduced(20, 140).toFloat();
-    juce::ColourGradient panelGradient(
-        juce::Colour(0xff3a3a3a), mainPanel.getX(), mainPanel.getY(),
-        juce::Colour(0xff2a2a2a), mainPanel.getX(), mainPanel.getBottom(), false);
-    panelGradient.addColour(0.3f + 0.1f * std::sin(backgroundPhase), juce::Colour(0xff323232));
-    g.setGradientFill(panelGradient);
-    g.fillRoundedRectangle(mainPanel, 12.0f);
-
-    // Внутренняя тень панели
-    g.setColour(juce::Colour(0x20000000));
-    g.fillRoundedRectangle(mainPanel.reduced(2), 10.0f);
-
-    // Верхний блик панели
-    g.setColour(juce::Colour(0x15ffffff));
-    g.fillRoundedRectangle(mainPanel.removeFromBottom(mainPanel.getHeight() * 0.5f), 10.0f);
 }
 
 void ReverbEditor::resized()
@@ -323,17 +238,4 @@ void ReverbEditor::resized()
 
     // Версия — в правом нижнем углу
     versionLabel.setBounds(getWidth() - 80, getHeight() - 25, 70, 20);
-}
-
-void ReverbEditor::timerCallback()
-{
-    backgroundPhase += 0.02f;
-    if (backgroundPhase > juce::MathConstants<float>::twoPi)
-        backgroundPhase -= juce::MathConstants<float>::twoPi;
-    
-    logoGlow += 0.05f;
-    if (logoGlow > juce::MathConstants<float>::twoPi)
-        logoGlow -= juce::MathConstants<float>::twoPi;
-    
-    repaint();
 } 

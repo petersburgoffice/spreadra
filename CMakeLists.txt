@@ -54,7 +54,7 @@ target_sources(Reverbix PRIVATE ${SHIMMER_SOURCES})
 
 # Add binary resources
 juce_add_binary_data(ReverbixData SOURCES
-    Resources/bg.png
+    Resources/bg3.png
 )
 
 target_link_libraries(Reverbix PRIVATE

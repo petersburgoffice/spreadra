@@ -9,7 +9,7 @@ void CustomRotarySliderLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, i
     auto bounds = juce::Rectangle<int>(x, y, width, height).toFloat().reduced(8);
     auto radius = juce::jmin(bounds.getWidth(), bounds.getHeight()) / 2.0f;
     auto toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
-    auto lineW = juce::jmin(6.0f, radius * 0.4f);
+    auto lineW = juce::jmin(2.0f, radius * 0.4f);
     auto arcRadius = radius - lineW * 0.5f;
 
     // Draw the background arc (full circle)
@@ -81,10 +81,11 @@ void CustomRotarySliderLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, i
 ReverbEditor::ReverbEditor(ReverbProcessor& p)
     : AudioProcessorEditor(&p), processor(p)
 {
-    setSize(800, 500);
+    setSize(708, 388);
     
     // Create custom look and feel objects with specific colors
-    roomSizeLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xff00BCD4)); // Cyan/Teal
+    
+    roomSizeLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xff64ffff)); // Cyan/Teal
     decayTimeLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xffFF9800)); // Orange
     dryWetLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xff2196F3)); // Blue
     stereoWidthLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xffE0E0E0)); // Light Gray
@@ -97,12 +98,6 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     roomSizeSlider.setLookAndFeel(roomSizeLookAndFeel.get());
     addAndMakeVisible(roomSizeSlider);
 
-    roomSizeLabel.setText("ROOM SIZE", juce::dontSendNotification);
-    roomSizeLabel.setFont(juce::Font(14.0f, juce::Font::plain));
-    roomSizeLabel.setJustificationType(juce::Justification::centred);
-    roomSizeLabel.setColour(juce::Label::textColourId, juce::Colour(0xff00BCD4));
-    addAndMakeVisible(roomSizeLabel);
-
     // Setup Decay Time slider
     decayTimeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     decayTimeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
@@ -110,12 +105,6 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     decayTimeSlider.setValue(10.05);
     decayTimeSlider.setLookAndFeel(decayTimeLookAndFeel.get());
     addAndMakeVisible(decayTimeSlider);
-
-    decayTimeLabel.setText("DECAY TIME", juce::dontSendNotification);
-    decayTimeLabel.setFont(juce::Font(14.0f, juce::Font::plain));
-    decayTimeLabel.setJustificationType(juce::Justification::centred);
-    decayTimeLabel.setColour(juce::Label::textColourId, juce::Colour(0xffFF9800));
-    addAndMakeVisible(decayTimeLabel);
 
     // Setup Dry/Wet slider
     dryWetSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -125,12 +114,6 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     dryWetSlider.setLookAndFeel(dryWetLookAndFeel.get());
     addAndMakeVisible(dryWetSlider);
 
-    dryWetLabel.setText("DRY/WET", juce::dontSendNotification);
-    dryWetLabel.setFont(juce::Font(14.0f, juce::Font::plain));
-    dryWetLabel.setJustificationType(juce::Justification::centred);
-    dryWetLabel.setColour(juce::Label::textColourId, juce::Colour(0xff2196F3));
-    addAndMakeVisible(dryWetLabel);
-
     // Setup Stereo Width slider
     stereoWidthSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     stereoWidthSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
@@ -138,12 +121,6 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     stereoWidthSlider.setValue(100.0);
     stereoWidthSlider.setLookAndFeel(stereoWidthLookAndFeel.get());
     addAndMakeVisible(stereoWidthSlider);
-
-    stereoWidthLabel.setText("STEREO WIDTH", juce::dontSendNotification);
-    stereoWidthLabel.setFont(juce::Font(14.0f, juce::Font::plain));
-    stereoWidthLabel.setJustificationType(juce::Justification::centred);
-    stereoWidthLabel.setColour(juce::Label::textColourId, juce::Colour(0xffE0E0E0));
-    addAndMakeVisible(stereoWidthLabel);
     
     // Подключение к параметрам процессора
     roomSizeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -163,7 +140,7 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     addAndMakeVisible(versionLabel);
     
     // Загрузка фонового изображения из binary resources
-    backgroundImage = juce::ImageCache::getFromMemory(BinaryData::bg_png, BinaryData::bg_pngSize);
+    backgroundImage = juce::ImageCache::getFromMemory(BinaryData::bg3_png, BinaryData::bg3_pngSize);
 }
 
 ReverbEditor::~ReverbEditor()
@@ -200,23 +177,20 @@ void ReverbEditor::resized()
     const int sliderWidth = 120;
     const int sliderHeight = 120;
     const int spacing = (bounds.getWidth() - sliderWidth * 4) / 3;
-    int y = bounds.getY() + (bounds.getHeight() - sliderHeight - 40) / 2; // Центрируем по вертикали
-    int x = bounds.getX();
+    
+    int y = bounds.getY() + 110;
+    int x = bounds.getX()+1;
 
     roomSizeSlider.setBounds(x, y, sliderWidth, sliderHeight);
-    roomSizeLabel.setBounds(x, y + sliderHeight + 5, sliderWidth, 20);
-    x += sliderWidth + spacing;
+    x += sliderWidth + 47;
     
     decayTimeSlider.setBounds(x, y, sliderWidth, sliderHeight);
-    decayTimeLabel.setBounds(x, y + sliderHeight + 5, sliderWidth, 20);
-    x += sliderWidth + spacing;
+    x += sliderWidth + 46;
     
     stereoWidthSlider.setBounds(x, y, sliderWidth, sliderHeight);
-    stereoWidthLabel.setBounds(x, y + sliderHeight + 5, sliderWidth, 20);
-    x += sliderWidth + spacing;
-    
+    x += sliderWidth + 48;
+
     dryWetSlider.setBounds(x, y, sliderWidth, sliderHeight);
-    dryWetLabel.setBounds(x, y + sliderHeight + 5, sliderWidth, 20);
 
     // Версия — в правом нижнем углу
     versionLabel.setBounds(getWidth() - 80, getHeight() - 25, 70, 20);

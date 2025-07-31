@@ -1,0 +1,33 @@
+Reverbix License Agreement
+
+Copyright (c) 2024 Reverbix. All rights reserved.
+
+This software is proprietary and confidential. By installing this software, you agree to the following terms:
+
+1. LICENSE GRANT
+   This software is licensed, not sold, to you by Reverbix for use under the terms of this license agreement.
+
+2. PERMITTED USE
+   You may install and use this software on any number of computers you own or control.
+
+3. RESTRICTIONS
+   You may not:
+   - Distribute, sell, lease, rent, lend, or sublicense this software
+   - Reverse engineer, decompile, or disassemble this software
+   - Remove or alter any proprietary notices or labels
+
+4. OWNERSHIP
+   Reverbix retains all right, title, and interest in and to the software.
+
+5. WARRANTY DISCLAIMER
+   This software is provided "as is" without warranty of any kind, either express or implied.
+
+6. LIMITATION OF LIABILITY
+   Reverbix shall not be liable for any damages arising from the use of this software.
+
+7. TERMINATION
+   This license is effective until terminated. It will terminate immediately without notice if you fail to comply with any term of this license.
+
+By clicking "I Agree", you acknowledge that you have read and agree to be bound by the terms of this license agreement.
+
+If you do not agree to these terms, click "Cancel" and do not install the software. 

@@ -81,7 +81,7 @@ void CustomRotarySliderLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, i
 SpreadraEditor::SpreadraEditor(SpreadraProcessor& p)
     : AudioProcessorEditor(&p), processor(p)
 {
-    setSize(1478, 701);
+    setSize(739, 350);
     
     // Create custom look and feel objects with specific colors
     dryWetLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xff2196F3)); // Blue

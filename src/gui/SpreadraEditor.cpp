@@ -153,13 +153,13 @@ void SpreadraEditor::resized()
 
     const int sliderWidth = 120;
     const int sliderHeight = 120;
-    const int spacing = (bounds.getWidth() - sliderWidth * 2) / 1; // Only 2 sliders now
+    const int spacing = 213;
     
-    int y = bounds.getY() + 110;
-    int x = bounds.getX() + bounds.getWidth() / 4; // Center the two sliders
+    int y = bounds.getY() + 103;
+    int x = bounds.getX() + bounds.getWidth() / 4 - 1; // Center the two sliders
 
     stereoWidthSlider.setBounds(x, y, sliderWidth, sliderHeight);
-    x += sliderWidth + spacing / 2;
+    x += spacing;
 
     dryWetSlider.setBounds(x, y, sliderWidth, sliderHeight);
 

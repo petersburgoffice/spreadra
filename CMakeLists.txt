@@ -54,7 +54,7 @@ target_sources(Spreadra PRIVATE ${SHIMMER_SOURCES})
 
 # Add binary resources
 juce_add_binary_data(SpreadraData SOURCES
-    Resources/bg3.png
+    Resources/UI.png
 )
 
 target_link_libraries(Spreadra PRIVATE

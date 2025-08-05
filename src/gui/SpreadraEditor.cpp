@@ -81,7 +81,7 @@ void CustomRotarySliderLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, i
 SpreadraEditor::SpreadraEditor(SpreadraProcessor& p)
     : AudioProcessorEditor(&p), processor(p)
 {
-    setSize(708, 388);
+    setSize(1478, 701);
     
     // Create custom look and feel objects with specific colors
     dryWetLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xff2196F3)); // Blue
@@ -119,7 +119,7 @@ SpreadraEditor::SpreadraEditor(SpreadraProcessor& p)
     addAndMakeVisible(versionLabel);
     
     // Загрузка фонового изображения из binary resources
-    backgroundImage = juce::ImageCache::getFromMemory(BinaryData::bg3_png, BinaryData::bg3_pngSize);
+    backgroundImage = juce::ImageCache::getFromMemory(BinaryData::UI_png, BinaryData::UI_pngSize);
 }
 
 SpreadraEditor::~SpreadraEditor()

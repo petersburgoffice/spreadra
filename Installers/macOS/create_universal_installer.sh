@@ -48,8 +48,7 @@ if [ -n "$AAX_PLUGIN" ]; then
     lipo -info "$AAX_PLUGIN/Contents/MacOS/"* 2>/dev/null | head -1 || echo "   AAX binary not found"
 fi
 
-if false; then
-fi
+# No standalone app needed
 
 # Create temporary directory for installer files
 TEMP_DIR=$(mktemp -d)
@@ -80,8 +79,7 @@ if [ -n "$AAX_PLUGIN" ]; then
     cp -R "$AAX_PLUGIN" "$INSTALLER_ROOT/Library/Application Support/Avid/Audio/Plug-Ins/"
 fi
 
-if false; then
-fi
+# Standalone app not needed for this build
 
 # Create installer package
 INSTALLER_NAME="Spreadra_${VERSION}_Universal_macOS_Installer.pkg"

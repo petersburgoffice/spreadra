@@ -46,17 +46,26 @@ juce_add_plugin(Spreadra
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     PLUGIN_MANUFACTURER_CODE Snmk
     PLUGIN_CODE Spdr
-    FORMATS AU
+    FORMATS AU VST3
     PRODUCT_NAME "Spreadra"
 )
 
-# Force modern parameter indexing
+# Force VST3-only mode without VST2 legacy conflicts
 target_compile_definitions(Spreadra PRIVATE
     JUCE_FORCE_USE_LEGACY_PARAM_IDS=0
+    JucePlugin_Build_VST=0
+    JUCE_VST_FORCE_BYPASS_PARAM_CHECK=1
 )
 
 target_compile_definitions(Spreadra_AU PRIVATE  
     JUCE_FORCE_USE_LEGACY_PARAM_IDS=0
+    JucePlugin_Build_VST=0
+)
+
+target_compile_definitions(Spreadra_VST3 PRIVATE
+    JUCE_FORCE_USE_LEGACY_PARAM_IDS=0
+    JucePlugin_Build_VST=0
+    JUCE_IGNORE_VST3_MISMATCHED_PARAMETER_ID_WARNING=1
 )
 
 target_sources(Spreadra PRIVATE ${SHIMMER_SOURCES})
@@ -97,5 +106,18 @@ if(APPLE)
         COMMENT "Installing AU plugin to ${AU_INSTALL_DIR}"
     )
     
+    # Путь к папке VST3 плагинов
+    set(VST3_INSTALL_DIR "$ENV{HOME}/Library/Audio/Plug-Ins/VST3")
+    
+    # Добавляем команду копирования VST3 после сборки
+    add_custom_command(TARGET Spreadra_VST3 POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${VST3_INSTALL_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory 
+            "$<TARGET_BUNDLE_DIR:Spreadra_VST3>" 
+            "${VST3_INSTALL_DIR}/Spreadra.vst3"
+        COMMENT "Installing VST3 plugin to ${VST3_INSTALL_DIR}"
+    )
+    
     message(STATUS "AU plugin will be automatically installed to: ${AU_INSTALL_DIR}")
+    message(STATUS "VST3 plugin will be automatically installed to: ${VST3_INSTALL_DIR}")
 endif() 

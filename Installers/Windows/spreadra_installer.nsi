@@ -6,7 +6,7 @@
 
 ; Installer Information
 !define PRODUCT_NAME "Spreadra"
-!define PRODUCT_VERSION "1.0.0"
+!define PRODUCT_VERSION "0.9.21"
 !define PRODUCT_PUBLISHER "Spreadra"
 !define PRODUCT_WEB_SITE "https://github.com/petersburgoffice/spreadra"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\Spreadra"
@@ -15,8 +15,8 @@
 
 ; MUI Settings
 !define MUI_ABORTWARNING
-!define MUI_ICON "..\..\resources\icon.ico"
-!define MUI_UNICON "..\..\resources\icon.ico"
+; !define MUI_ICON "..\..\resources\icon.ico"
+; !define MUI_UNICON "..\..\resources\icon.ico"
 
 ; Welcome page
 !insertmacro MUI_PAGE_WELCOME

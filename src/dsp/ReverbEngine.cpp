@@ -324,7 +324,7 @@ float ReverbEngine::calculateRoomScale(float roomSize)
     // Согласно статье Relab, roomSize влияет на:
     // 1. Delay Time (время до первых отражений)
     // 2. Echo Density (плотность отражений)
-    // 3. Reverberation Rise Time (скорость нарастания) - Reverbix
+    // 3. Reverberation Rise Time (скорость нарастания) - Spreadra
     
     // Физическая модель: размер комнаты влияет на время распространения звука
     // Маленькая комната (10m²): быстрые, плотные отражения
@@ -481,7 +481,7 @@ int ReverbEngine::gcd(int a, int b)
 float ReverbEngine::calculateFeedback(float decayTime, double sampleRate)
 {
     // ИСПРАВЛЕНО: Используем простую реалистичную зависимость как в Freeverb/Airwindows
-    // Профессиональные reverbix используют feedback в диапазоне 0.3-0.9
+    // Профессиональные spreadra используют feedback в диапазоне 0.3-0.9
     // Freeverb: roomsize = 0.84, Airwindows: feedback 0-0.7
     
     // Используем гиперболический тангенс для плавной кривой:
@@ -762,7 +762,7 @@ void ReverbEngine::updateFilterParameters()
         filter.feedback = calculateFeedback(params.decayTime, sampleRate);
         
         // ИСПРАВЛЕНО: Damping должен быть очень маленьким (1-5%), не 50%!
-        // В профессиональных reverbix damping - это слабое ослабление высоких частот
+        // В профессиональных spreadra damping - это слабое ослабление высоких частот
         // params.damping диапазон 0-100%, но используем только 0-5% для реального damping
         float dampingNormalized = MathUtils::clamp(params.damping / 100.0f, 0.0f, 1.0f);
         filter.damping = dampingNormalized * 0.05f; // Максимум 5% damping, не 100%!
@@ -773,7 +773,7 @@ void ReverbEngine::updateFilterParameters()
         filter.feedback = calculateFeedback(params.decayTime, sampleRate);
         
         // ИСПРАВЛЕНО: Damping должен быть очень маленьким (1-5%), не 50%!
-        // В профессиональных reverbix damping - это слабое ослабление высоких частот
+        // В профессиональных spreadra damping - это слабое ослабление высоких частот
         // params.damping диапазон 0-100%, но используем только 0-5% для реального damping
         float dampingNormalized = MathUtils::clamp(params.damping / 100.0f, 0.0f, 1.0f);
         filter.damping = dampingNormalized * 0.05f; // Максимум 5% damping, не 100%!
@@ -843,7 +843,7 @@ void ReverbEngine::updateEarlyReflections()
 void ReverbEngine::updateDelayTimes()
 {
     // НОВЫЙ ПОДХОД: Плавное изменение времени задержки как у DecayTime
-    // Используем fractional delay с интерполяцией - как в профессиональных reverbix
+    // Используем fractional delay с интерполяцией - как в профессиональных spreadra
     
     // Получаем новые времена задержек
     auto newDelaysL = getScaledCombDelays(false);

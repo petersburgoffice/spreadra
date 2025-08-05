@@ -3,7 +3,7 @@
 # Build script for Universal Binary (Intel + Apple Silicon)
 # This creates a single version compatible with both architectures
 
-echo "🔧 Building Reverbix Universal Binary..."
+echo "🔧 Building Spreadra Universal Binary..."
 
 # Increment version
 if [ -f ./increment_version.sh ]; then
@@ -31,7 +31,7 @@ if [ $? -eq 0 ]; then
     AU_PATH=$(find Builds_Universal -name "*.component" -type d)
     VST3_PATH=$(find Builds_Universal -name "*.vst3" -type d)
     AAX_PATH=$(find Builds_Universal -name "*.aaxplugin" -type d)
-    STANDALONE_PATH=$(find Builds_Universal -name "Reverbix" -type f)
+    STANDALONE_PATH=$(find Builds_Universal -name "Spreadra" -type f)
     
     [ -n "$AU_PATH" ] && echo "   AU: $AU_PATH"
     [ -n "$VST3_PATH" ] && echo "   VST3: $VST3_PATH"

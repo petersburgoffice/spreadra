@@ -35,20 +35,8 @@ public:
     // Параметры алгоритма
     struct Parameters
     {
-        // Reverbix parameters
-        float roomSize = 1000.0f;      // m², 10-10000
-        float decayTime = 3.0f;        // seconds, 0.1-20
-        float damping = 50.0f;         // %, 0-100
-        float preDelay = 0.0f;         // ms, 0-500
-        float stereoWidth = 50.0f;     // %, 0-100
-        
-        // Filter parameters
-        float lowPassFreq = 8000.0f;   // Hz, 20-20000
-        float highPassFreq = 80.0f;    // Hz, 20-20000
-        bool enableLowPass = false;    // Enable low-pass filter
-        bool enableHighPass = false;   // Enable high-pass filter
-        
-        // Mix parameters
+        // Spreadra parameters
+        float stereoWidth = 100.0f;    // %, 0-150
         float dryWet = 50.0f;          // %, 0-100
     };
 
@@ -57,8 +45,6 @@ public:
 
     //==============================================================================
     // Индивидуальные параметры
-    void setRoomSize(float roomSizeM2);
-    void setDecayTime(float decayTimeSeconds);
     void setDryWet(float dryWetPercent);
     void setStereoWidth(float stereoWidthPercent);
 

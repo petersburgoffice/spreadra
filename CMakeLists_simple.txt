@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(ReverbixTest VERSION 1.0.0 LANGUAGES CXX)
+project(SpreadraTest VERSION 0.9.1 LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -9,11 +9,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(JUCE)
 
 # Simple test executable
-add_executable(ReverbixTest
+add_executable(SpreadraTest
     test_build.cpp
 )
 
-target_link_libraries(ReverbixTest
+target_link_libraries(SpreadraTest
     juce::juce_core
     juce::juce_audio_processors
 ) 

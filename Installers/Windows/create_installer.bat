@@ -1,6 +1,6 @@
 @echo off
 echo.
-echo 🎵 Creating Reverbix Windows Installer...
+echo 🎵 Creating Spreadra Windows Installer...
 echo.
 
 REM Check if NSIS is installed
@@ -16,10 +16,10 @@ if %errorlevel% neq 0 (
 )
 
 REM Check if VST3 plugin exists
-if not exist "..\..\build\Reverbix_artefacts\VST3\Reverbix.vst3" (
+if not exist "..\..\build\Spreadra_artefacts\VST3\Spreadra.vst3" (
     echo ❌ Error: VST3 plugin not found
     echo 💡 Please build the plugin first using the build scripts
-    echo    Expected location: ..\..\build\Reverbix_artefacts\VST3\Reverbix.vst3
+    echo    Expected location: ..\..\build\Spreadra_artefacts\VST3\Spreadra.vst3
     echo.
     pause
     exit /b 1
@@ -31,18 +31,18 @@ echo 📦 Version: %VERSION%
 echo.
 
 REM Update version in NSIS script
-powershell -Command "(gc reverbix_installer.nsi) -replace '!define PRODUCT_VERSION \".*\"', '!define PRODUCT_VERSION \"%VERSION%\"' | Out-File -encoding ASCII reverbix_installer_temp.nsi"
+powershell -Command "(gc spreadra_installer.nsi) -replace '!define PRODUCT_VERSION \".*\"', '!define PRODUCT_VERSION \"%VERSION%\"' | Out-File -encoding ASCII spreadra_installer_temp.nsi"
 
 echo 🔨 Building Windows installer...
-makensis reverbix_installer_temp.nsi
+makensis spreadra_installer_temp.nsi
 
 if %errorlevel% equ 0 (
     echo.
     echo ✅ Windows Installer created successfully!
-    echo 📦 File: Reverbix_%VERSION%_Windows_Installer.exe
+    echo 📦 File: Spreadra_%VERSION%_Windows_Installer.exe
     
     REM Get file size
-    for %%A in ("Reverbix_%VERSION%_Windows_Installer.exe") do (
+    for %%A in ("Spreadra_%VERSION%_Windows_Installer.exe") do (
         set size=%%~zA
         set /a sizeMB=!size!/1024/1024
     )
@@ -62,7 +62,7 @@ if %errorlevel% equ 0 (
 )
 
 REM Clean up temporary file
-del reverbix_installer_temp.nsi 2>nul
+del spreadra_installer_temp.nsi 2>nul
 
 echo.
 pause 

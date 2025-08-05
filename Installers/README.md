@@ -1,6 +1,6 @@
-# Reverbix Installers
+# Spreadra Installers
 
-This directory contains scripts and configurations for creating professional installers for Reverbix on both macOS and Windows platforms.
+This directory contains scripts and configurations for creating professional installers for Spreadra on both macOS and Windows platforms.
 
 ## Quick Start
 
@@ -23,7 +23,7 @@ Installers/
 │   └── create_universal_installer.sh    # macOS installer creation script
 ├── Windows/
 │   ├── create_installer.bat             # Windows installer creation script
-│   ├── reverbix_installer.nsi           # NSIS installer script
+│   ├── spreadra_installer.nsi           # NSIS installer script
 │   └── license.txt                      # License agreement
 └── README.md                            # This file
 ```
@@ -88,7 +88,7 @@ create_installer.bat
 ### Installation Locations
 - VST3: `C:\Program Files\Common Files\VST3\`
 - AAX: `C:\Program Files\Common Files\Avid\Audio\Plug-Ins\`
-- Standalone: `C:\Program Files\Reverbix\`
+- Standalone: `C:\Program Files\Spreadra\`
 
 ## Build Process
 
@@ -121,11 +121,11 @@ The Windows installer process:
 
 ### macOS Installer
 - Edit `Installers/macOS/create_universal_installer.sh`
-- Modify installer identifier: `com.reverbix.universal`
+- Modify installer identifier: `com.spreadra.universal`
 - Change installation paths if needed
 
 ### Windows Installer
-- Edit `Installers/Windows/reverbix_installer.nsi`
+- Edit `Installers/Windows/spreadra_installer.nsi`
 - Modify `PRODUCT_*` defines for branding
 - Add/remove installation components
 - Customize installer pages and dialogs
@@ -135,11 +135,11 @@ The Windows installer process:
 ### macOS
 ```bash
 # Install
-sudo installer -pkg "Installers/macOS/Reverbix_X.X.X_Universal_macOS_Installer.pkg" -target /
+sudo installer -pkg "Installers/macOS/Spreadra_X.X.X_Universal_macOS_Installer.pkg" -target /
 
 # Verify installation
-ls ~/Library/Audio/Plug-Ins/Components/Reverbix*
-ls ~/Library/Audio/Plug-Ins/VST3/Reverbix*
+ls ~/Library/Audio/Plug-Ins/Components/Spreadra*
+ls ~/Library/Audio/Plug-Ins/VST3/Spreadra*
 ```
 
 ### Windows

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Create Universal Binary installer for Reverbix
+# Create Universal Binary installer for Spreadra
 # This installer will work on both Intel and Apple Silicon Macs
 
 set -e
@@ -12,7 +12,7 @@ BUILD_DIR="$PROJECT_ROOT/Builds_Universal"
 # Get version
 VERSION=$(cat "$PROJECT_ROOT/version.txt" 2>/dev/null || echo "1.0.0")
 
-echo "🔧 Creating Universal Binary installer for Reverbix v$VERSION..."
+echo "🔧 Creating Universal Binary installer for Spreadra v$VERSION..."
 
 # Check if Universal build exists
 if [ ! -d "$BUILD_DIR" ]; then
@@ -24,7 +24,7 @@ fi
 AU_PLUGIN=$(find "$BUILD_DIR" -name "*.component" -type d | head -1)
 VST3_PLUGIN=$(find "$BUILD_DIR" -name "*.vst3" -type d | head -1)
 AAX_PLUGIN=$(find "$BUILD_DIR" -name "*.aaxplugin" -type d | head -1)
-STANDALONE_APP=$(find "$BUILD_DIR" -name "Reverbix.app" -type d | head -1)
+STANDALONE_APP=$(find "$BUILD_DIR" -name "Spreadra.app" -type d | head -1)
 
 echo "📦 Found plugins:"
 [ -n "$AU_PLUGIN" ] && echo "   AU: $AU_PLUGIN"
@@ -90,12 +90,12 @@ if [ -n "$STANDALONE_APP" ]; then
 fi
 
 # Create installer package
-INSTALLER_NAME="Reverbix_${VERSION}_Universal_macOS_Installer.pkg"
+INSTALLER_NAME="Spreadra_${VERSION}_Universal_macOS_Installer.pkg"
 INSTALLER_PATH="$SCRIPT_DIR/$INSTALLER_NAME"
 
 echo "🔨 Building installer package..."
 pkgbuild --root "$INSTALLER_ROOT" \
-         --identifier "com.reverbix.universal" \
+         --identifier "com.spreadra.universal" \
          --version "$VERSION" \
          --install-location "/" \
          "$INSTALLER_PATH"

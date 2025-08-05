@@ -4,6 +4,6 @@
 int main()
 {
     juce::MessageManager::getInstance();
-    juce::Logger::writeToLog("Reverbix plugin test build successful!");
+    juce::Logger::writeToLog("Spreadra plugin test build successful!");
     return 0;
 } 

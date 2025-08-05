@@ -24,28 +24,9 @@ public:
     // Параметры плагина
     struct Parameters
     {
-        // Delay parameters
-        float delayTime = 500.0f;      // ms, 10-2000
-        float feedback = 120.0f;       // %, 0-150
-        float diffusion = 50.0f;       // %, 0-100
-        float modulation = 0.0f;       // Hz, 0-10
-        float modulationDepth = 0.0f;  // ms, 0-50
-        
-        // Reverbix parameters
-        float roomSize = 1000.0f;      // m², 10-10000
-        float decayTime = 3.0f;        // seconds, 0.1-20
-        float damping = 50.0f;         // %, 0-100
-        float preDelay = 0.0f;         // ms, 0-500
+        // Spreadra parameters
         float stereoWidth = 100.0f;    // %, 0-150
-        
-        // Mix parameters
         float dryWet = 50.0f;          // %, 0-100
-        
-        // Filter parameters
-        float lowPassFreq = 20000.0f;  // Hz, 20-20000
-        float highPassFreq = 20.0f;    // Hz, 20-20000
-        bool enableLowPass = false;
-        bool enableHighPass = false;
     };
 
     //==============================================================================

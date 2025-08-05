@@ -1,4 +1,4 @@
-#include "ReverbEditor.h"
+#include "SpreadraEditor.h"
 #include "../core/Version.h"
 #include "BinaryData.h"
 
@@ -75,36 +75,19 @@ void CustomRotarySliderLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, i
 }
 
 // ============================================================================
-// ReverbEditor Implementation
+// SpreadraEditor Implementation
 // ============================================================================
 
-ReverbEditor::ReverbEditor(ReverbProcessor& p)
+SpreadraEditor::SpreadraEditor(SpreadraProcessor& p)
     : AudioProcessorEditor(&p), processor(p)
 {
     setSize(708, 388);
     
     // Create custom look and feel objects with specific colors
-    
-    roomSizeLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xff64ffff)); // Cyan/Teal
-    decayTimeLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xffFF9800)); // Orange
     dryWetLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xff2196F3)); // Blue
     stereoWidthLookAndFeel = std::make_unique<CustomRotarySliderLookAndFeel>(juce::Colour(0xffE0E0E0)); // Light Gray
     
-    // Setup Room Size slider
-    roomSizeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    roomSizeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    roomSizeSlider.setRange(10.0, 10000.0, 10.0);
-    roomSizeSlider.setValue(5005.0);
-    roomSizeSlider.setLookAndFeel(roomSizeLookAndFeel.get());
-    addAndMakeVisible(roomSizeSlider);
 
-    // Setup Decay Time slider
-    decayTimeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    decayTimeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    decayTimeSlider.setRange(0.1, 20.0, 0.1);
-    decayTimeSlider.setValue(10.05);
-    decayTimeSlider.setLookAndFeel(decayTimeLookAndFeel.get());
-    addAndMakeVisible(decayTimeSlider);
 
     // Setup Dry/Wet slider
     dryWetSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -123,10 +106,6 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     addAndMakeVisible(stereoWidthSlider);
     
     // Подключение к параметрам процессора
-    roomSizeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        processor.getValueTreeState(), "roomSize", roomSizeSlider);
-    decayTimeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        processor.getValueTreeState(), "decayTime", decayTimeSlider);
     dryWetAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         processor.getValueTreeState(), "dryWet", dryWetSlider);
     stereoWidthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -143,15 +122,13 @@ ReverbEditor::ReverbEditor(ReverbProcessor& p)
     backgroundImage = juce::ImageCache::getFromMemory(BinaryData::bg3_png, BinaryData::bg3_pngSize);
 }
 
-ReverbEditor::~ReverbEditor()
+SpreadraEditor::~SpreadraEditor()
 {
-    roomSizeSlider.setLookAndFeel(nullptr);
-    decayTimeSlider.setLookAndFeel(nullptr);
     dryWetSlider.setLookAndFeel(nullptr);
     stereoWidthSlider.setLookAndFeel(nullptr);
 }
 
-void ReverbEditor::paint(juce::Graphics& g)
+void SpreadraEditor::paint(juce::Graphics& g)
 {
     // Отрисовка фонового изображения
     if (backgroundImage.isValid())
@@ -170,25 +147,19 @@ void ReverbEditor::paint(juce::Graphics& g)
     }
 }
 
-void ReverbEditor::resized()
+void SpreadraEditor::resized()
 {
     auto bounds = getLocalBounds().reduced(40, 40);
 
     const int sliderWidth = 120;
     const int sliderHeight = 120;
-    const int spacing = (bounds.getWidth() - sliderWidth * 4) / 3;
+    const int spacing = (bounds.getWidth() - sliderWidth * 2) / 1; // Only 2 sliders now
     
     int y = bounds.getY() + 110;
-    int x = bounds.getX()+1;
+    int x = bounds.getX() + bounds.getWidth() / 4; // Center the two sliders
 
-    roomSizeSlider.setBounds(x, y, sliderWidth, sliderHeight);
-    x += sliderWidth + 47;
-    
-    decayTimeSlider.setBounds(x, y, sliderWidth, sliderHeight);
-    x += sliderWidth + 46;
-    
     stereoWidthSlider.setBounds(x, y, sliderWidth, sliderHeight);
-    x += sliderWidth + 48;
+    x += sliderWidth + spacing / 2;
 
     dryWetSlider.setBounds(x, y, sliderWidth, sliderHeight);
 

@@ -1,15 +1,15 @@
-; Reverbix Windows Installer
+; Spreadra Windows Installer
 ; NSIS Script for creating Windows installer
 
 !include "MUI2.nsh"
 !include "FileFunc.nsh"
 
 ; Installer Information
-!define PRODUCT_NAME "Reverbix"
+!define PRODUCT_NAME "Spreadra"
 !define PRODUCT_VERSION "1.0.0"
-!define PRODUCT_PUBLISHER "Reverbix"
-!define PRODUCT_WEB_SITE "https://github.com/azverev/reverbix"
-!define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\Reverbix"
+!define PRODUCT_PUBLISHER "Spreadra"
+!define PRODUCT_WEB_SITE "https://github.com/petersburgoffice/spreadra"
+!define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\Spreadra"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 
@@ -44,7 +44,7 @@
 
 ; Installer details
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "Reverbix_${PRODUCT_VERSION}_Windows_Installer.exe"
+OutFile "Spreadra_${PRODUCT_VERSION}_Windows_Installer.exe"
 InstallDir "$PROGRAMFILES64\Common Files\VST3"
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowInstDetails show
@@ -71,16 +71,16 @@ Section "VST3 Plugin (Required)" SEC01
   SetOutPath "$INSTDIR"
   
   ; Copy VST3 plugin
-  File /r "..\..\build\Reverbix_artefacts\VST3\Reverbix.vst3"
+  File /r "..\..\build\Spreadra_artefacts\VST3\Spreadra.vst3"
   
   ; Create uninstaller
-  WriteUninstaller "$INSTDIR\Reverbix Uninstaller.exe"
+  WriteUninstaller "$INSTDIR\Spreadra Uninstaller.exe"
   
   ; Registry entries
-  WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\Reverbix.vst3"
+  WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\Spreadra.vst3"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayName" "$(^Name)"
-  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\Reverbix Uninstaller.exe"
-  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\Reverbix.vst3"
+  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\Spreadra Uninstaller.exe"
+  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\Spreadra.vst3"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
@@ -96,8 +96,8 @@ Section "AAX Plugin (Pro Tools)" SEC02
   SetOutPath "$PROGRAMFILES64\Common Files\Avid\Audio\Plug-Ins"
   
   ; Copy AAX plugin if it exists
-  IfFileExists "..\..\build\Reverbix_artefacts\AAX\Reverbix.aaxplugin" 0 skip_aax
-    File /r "..\..\build\Reverbix_artefacts\AAX\Reverbix.aaxplugin"
+  IfFileExists "..\..\build\Spreadra_artefacts\AAX\Spreadra.aaxplugin" 0 skip_aax
+    File /r "..\..\build\Spreadra_artefacts\AAX\Spreadra.aaxplugin"
   skip_aax:
 SectionEnd
 
@@ -106,18 +106,18 @@ Section "Standalone Application" SEC03
   SetOutPath "$PROGRAMFILES64\${PRODUCT_NAME}"
   
   ; Copy standalone application if it exists
-  IfFileExists "..\..\build\Reverbix_artefacts\Standalone\Reverbix.exe" 0 skip_standalone
-    File "..\..\build\Reverbix_artefacts\Standalone\Reverbix.exe"
+  IfFileExists "..\..\build\Spreadra_artefacts\Standalone\Spreadra.exe" 0 skip_standalone
+    File "..\..\build\Spreadra_artefacts\Standalone\Spreadra.exe"
     
     ; Create desktop shortcut if standalone exists
-    CreateShortCut "$DESKTOP\${PRODUCT_NAME}.lnk" "$PROGRAMFILES64\${PRODUCT_NAME}\Reverbix.exe"
+    CreateShortCut "$DESKTOP\${PRODUCT_NAME}.lnk" "$PROGRAMFILES64\${PRODUCT_NAME}\Spreadra.exe"
   skip_standalone:
 SectionEnd
 
 Section "Desktop Shortcut" SEC04
   ; Only create if standalone app was installed
-  IfFileExists "$PROGRAMFILES64\${PRODUCT_NAME}\Reverbix.exe" 0 skip_desktop
-    CreateShortCut "$DESKTOP\${PRODUCT_NAME}.lnk" "$PROGRAMFILES64\${PRODUCT_NAME}\Reverbix.exe"
+  IfFileExists "$PROGRAMFILES64\${PRODUCT_NAME}\Spreadra.exe" 0 skip_desktop
+    CreateShortCut "$DESKTOP\${PRODUCT_NAME}.lnk" "$PROGRAMFILES64\${PRODUCT_NAME}\Spreadra.exe"
   skip_desktop:
 SectionEnd
 
@@ -125,10 +125,10 @@ Section "Start Menu Shortcuts" SEC05
   CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
   
   ; Create shortcuts for installed components
-  IfFileExists "$PROGRAMFILES64\${PRODUCT_NAME}\Reverbix.exe" 0 +2
-    CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk" "$PROGRAMFILES64\${PRODUCT_NAME}\Reverbix.exe"
+  IfFileExists "$PROGRAMFILES64\${PRODUCT_NAME}\Spreadra.exe" 0 +2
+    CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk" "$PROGRAMFILES64\${PRODUCT_NAME}\Spreadra.exe"
   
-  CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall.lnk" "$INSTDIR\Reverbix Uninstaller.exe"
+  CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall.lnk" "$INSTDIR\Spreadra Uninstaller.exe"
 SectionEnd
 
 ; Section descriptions
@@ -168,10 +168,10 @@ FunctionEnd
 ; Uninstaller Section
 Section Uninstall
   ; Remove plugin files
-  RMDir /r "$INSTDIR\Reverbix.vst3"
-  RMDir /r "$PROGRAMFILES64\Common Files\Avid\Audio\Plug-Ins\Reverbix.aaxplugin"
+  RMDir /r "$INSTDIR\Spreadra.vst3"
+  RMDir /r "$PROGRAMFILES64\Common Files\Avid\Audio\Plug-Ins\Spreadra.aaxplugin"
   RMDir /r "$PROGRAMFILES64\${PRODUCT_NAME}"
-  Delete "$INSTDIR\Reverbix Uninstaller.exe"
+  Delete "$INSTDIR\Spreadra Uninstaller.exe"
   
   ; Remove shortcuts
   Delete "$DESKTOP\${PRODUCT_NAME}.lnk"

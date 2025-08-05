@@ -6,8 +6,7 @@
 ReverbAlgorithm::ReverbAlgorithm()
 {
     // Инициализация параметров по умолчанию
-    params.roomSize = 1000.0f;
-    params.decayTime = 3.0f;
+    params.stereoWidth = 100.0f;
     params.dryWet = 50.0f;
 }
 
@@ -86,17 +85,7 @@ void ReverbAlgorithm::setParameters(const Parameters& newParams)
     updateDSPParameters();
 }
 
-void ReverbAlgorithm::setRoomSize(float roomSizeM2)
-{
-    params.roomSize = MathUtils::clamp(roomSizeM2, 10.0f, 10000.0f);
-    reverbEngine.setRoomSize(params.roomSize);
-}
 
-void ReverbAlgorithm::setDecayTime(float decayTimeSeconds)
-{
-    params.decayTime = MathUtils::clamp(decayTimeSeconds, 0.1f, 20.0f);
-    reverbEngine.setDecayTime(params.decayTime);
-}
 
 void ReverbAlgorithm::setDryWet(float dryWetPercent)
 {
@@ -139,22 +128,8 @@ void ReverbAlgorithm::updateDSPParameters()
     if (!isPrepared)
         return;
     
-    // Обновление параметров reverbix engine
-    ReverbEngine::Parameters reverbParams;
-    reverbParams.roomSize = params.roomSize;
-    reverbParams.decayTime = params.decayTime;
-    reverbParams.damping = params.damping;
-    reverbParams.preDelay = params.preDelay;
-    reverbParams.stereoWidth = params.stereoWidth;
-    reverbEngine.setParameters(reverbParams);
-    
-    // Обновление параметров filter bank
-    FilterBank::Parameters filterParams;
-    filterParams.lowPassFreq = params.lowPassFreq;
-    filterParams.highPassFreq = params.highPassFreq;
-    filterParams.enableLowPass = params.enableLowPass;
-    filterParams.enableHighPass = params.enableHighPass;
-    filterBank.setParameters(filterParams);
+    // Обновление параметров spreadra engine
+    reverbEngine.setStereoWidth(params.stereoWidth);
 }
 
 //==============================================================================
@@ -170,7 +145,7 @@ void ReverbAlgorithm::processStereoInternal(const float* inputL, const float* in
         return;
     }
     
-    // Обрабатываем wet сигнал через ReverbixEngine
+    // Обрабатываем wet сигнал через SpreadraEngine
     std::copy(inputL, inputL + numSamples, tempBufferL.data());
     std::copy(inputR, inputR + numSamples, tempBufferR.data());
     reverbEngine.processStereo(tempBufferL.data(), tempBufferR.data(), 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Reverbix Installer Creator
+# Spreadra Installer Creator
 # Creates installers for both macOS and Windows
 
 set -e
@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🎵 Reverbix Universal Binary Installer Creator${NC}"
+echo -e "${BLUE}🎵 Spreadra Universal Binary Installer Creator${NC}"
 echo -e "${PURPLE}===============================================${NC}"
 
 # Get version from version.txt
@@ -45,7 +45,7 @@ chmod +x Installers/macOS/create_universal_installer.sh
 ./Installers/macOS/create_universal_installer.sh
 
 # Check if macOS installer was created
-MACOS_INSTALLER="Installers/macOS/Reverbix_${VERSION}_Universal_macOS_Installer.pkg"
+MACOS_INSTALLER="Installers/macOS/Spreadra_${VERSION}_Universal_macOS_Installer.pkg"
 if [ -f "$MACOS_INSTALLER" ]; then
     echo -e "${GREEN}✅ macOS installer created: ${MACOS_INSTALLER}${NC}"
     MACOS_SIZE=$(du -h "$MACOS_INSTALLER" | cut -f1)
@@ -66,10 +66,10 @@ echo -e "   3. Build the plugin on Windows using CMake"
 echo -e "   4. Run: ${GREEN}Installers\\Windows\\create_installer.bat${NC}"
 echo ""
 echo -e "${YELLOW}📋 Windows installer will create:${NC}"
-echo -e "   • ${GREEN}Reverbix_${VERSION}_Windows_Installer.exe${NC}"
+echo -e "   • ${GREEN}Spreadra_${VERSION}_Windows_Installer.exe${NC}"
 echo -e "   • Installs VST3 to: ${BLUE}C:\\Program Files\\Common Files\\VST3\\${NC}"
 echo -e "   • Installs AAX to: ${BLUE}C:\\Program Files\\Common Files\\Avid\\Audio\\Plug-Ins\\${NC}"
-echo -e "   • Standalone app to: ${BLUE}C:\\Program Files\\Reverbix\\${NC}"
+echo -e "   • Standalone app to: ${BLUE}C:\\Program Files\\Spreadra\\${NC}"
 echo -e "   • Creates uninstaller and registry entries"
 
 echo ""
@@ -105,7 +105,7 @@ echo ""
 echo -e "   ${YELLOW}Windows:${NC}"
 echo -e "     • VST3: C:\\Program Files\\Common Files\\VST3\\"
 echo -e "     • AAX: C:\\Program Files\\Common Files\\Avid\\Audio\\Plug-Ins\\"
-echo -e "     • Standalone: C:\\Program Files\\Reverbix\\"
+echo -e "     • Standalone: C:\\Program Files\\Spreadra\\"
 
 echo ""
-echo -e "${BLUE}🔥 Ready to distribute Reverbix!${NC}" 
+echo -e "${BLUE}🔥 Ready to distribute Spreadra!${NC}" 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(Reverbix VERSION 0.1.0)
+project(Spreadra VERSION 0.9.1)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -38,27 +38,27 @@ file(GLOB_RECURSE SHIMMER_SOURCES
     src/gui/*.cpp src/gui/*.h
 )
 
-juce_add_plugin(Reverbix
+juce_add_plugin(Spreadra
     COMPANY_NAME "SonicMakers"
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE
     NEEDS_MIDI_OUTPUT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     PLUGIN_MANUFACTURER_CODE Snmk
-    PLUGIN_CODE Rvbx
+    PLUGIN_CODE Spdr
     FORMATS AU Standalone
-    PRODUCT_NAME "Reverbix"
+    PRODUCT_NAME "Spreadra"
 )
 
-target_sources(Reverbix PRIVATE ${SHIMMER_SOURCES})
+target_sources(Spreadra PRIVATE ${SHIMMER_SOURCES})
 
 # Add binary resources
-juce_add_binary_data(ReverbixData SOURCES
+juce_add_binary_data(SpreadraData SOURCES
     Resources/bg3.png
 )
 
-target_link_libraries(Reverbix PRIVATE
-    ReverbixData
+target_link_libraries(Spreadra PRIVATE
+    SpreadraData
     juce::juce_audio_utils
     juce::juce_audio_processors
     juce::juce_audio_plugin_client
@@ -80,11 +80,11 @@ if(APPLE)
     set(AU_INSTALL_DIR "$ENV{HOME}/Library/Audio/Plug-Ins/Components")
     
     # Добавляем команду копирования AU после сборки
-    add_custom_command(TARGET Reverbix_AU POST_BUILD
+    add_custom_command(TARGET Spreadra_AU POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${AU_INSTALL_DIR}"
         COMMAND ${CMAKE_COMMAND} -E copy_directory 
-            "$<TARGET_BUNDLE_DIR:Reverbix_AU>" 
-            "${AU_INSTALL_DIR}/Reverbix.component"
+            "$<TARGET_BUNDLE_DIR:Spreadra_AU>" 
+            "${AU_INSTALL_DIR}/Spreadra.component"
         COMMENT "Installing AU plugin to ${AU_INSTALL_DIR}"
     )
     

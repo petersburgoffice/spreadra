@@ -1,30 +1,30 @@
-#include "ReverbProcessor.h"
-#include "../gui/ReverbEditor.h"
+#include "SpreadraProcessor.h"
+#include "../gui/SpreadraEditor.h"
  #include <algorithm>
 
 //==============================================================================
-ReverbProcessor::ReverbProcessor()
+SpreadraProcessor::SpreadraProcessor()
     : AudioProcessor(BusesProperties()
         .withInput("Input", juce::AudioChannelSet::stereo(), true)
         .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      parameters(*this, nullptr, juce::Identifier("ReverbParameters"), createParameterLayout())
+      parameters(*this, nullptr, juce::Identifier("SpreadraParameters"), createParameterLayout())
 {
     // Инициализация файлового логгера
-    Logger::getInstance().initialize("Reverbix");
-    SHIMMER_LOG_INFO("ReverbixProcessor initialized");
+    Logger::getInstance().initialize("Spreadra");
+    SHIMMER_LOG_INFO("SpreadraProcessor initialized");
     
     // Инициализация параметров
     updateParameters();
 }
 
-ReverbProcessor::~ReverbProcessor()
+SpreadraProcessor::~SpreadraProcessor()
 {
-    // SHIMMER_LOG_INFO("ReverbixProcessor shutting down");
+    // SHIMMER_LOG_INFO("SpreadraProcessor shutting down");
     // Logger::getInstance().shutdown();
 }
 
 //==============================================================================
-void ReverbProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+void SpreadraProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     // SHIMMER_LOG_INFO("Preparing to play: sampleRate=" + juce::String(sampleRate) + 
     //                  ", samplesPerBlock=" + juce::String(samplesPerBlock));
@@ -35,16 +35,16 @@ void ReverbProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     // Обновление метрик
     latencyMs = reverbAlgorithm.getLatency();
     
-    // SHIMMER_LOG_INFO("Reverbix ready: latency=" + juce::String(latencyMs, 2) + "ms");
+    // SHIMMER_LOG_INFO("Spreadra ready: latency=" + juce::String(latencyMs, 2) + "ms");
 }
 
-void ReverbProcessor::releaseResources()
+void SpreadraProcessor::releaseResources()
 {
     reverbAlgorithm.reset();
     tempBuffer.setSize(0, 0);
 }
 
-bool ReverbProcessor::isBusesLayoutSupported(const BusesLayout& busesLayout) const
+bool SpreadraProcessor::isBusesLayoutSupported(const BusesLayout& busesLayout) const
 {
     // Поддержка моно и стерео
     if (busesLayout.getMainOutputChannelSet() != juce::AudioChannelSet::mono() &&
@@ -57,7 +57,7 @@ bool ReverbProcessor::isBusesLayoutSupported(const BusesLayout& busesLayout) con
     return true;
 }
 
-void ReverbProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void SpreadraProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
     
@@ -86,38 +86,38 @@ void ReverbProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiB
 }
 
 //==============================================================================
-juce::AudioProcessorEditor* ReverbProcessor::createEditor()
+juce::AudioProcessorEditor* SpreadraProcessor::createEditor()
 {
-    return new ReverbEditor(*this);
+    return new SpreadraEditor(*this);
 }
 
-bool ReverbProcessor::hasEditor() const
+bool SpreadraProcessor::hasEditor() const
 {
     return true;
 }
 
 //==============================================================================
-const juce::String ReverbProcessor::getName() const
+const juce::String SpreadraProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool ReverbProcessor::acceptsMidi() const
+bool SpreadraProcessor::acceptsMidi() const
 {
     return false;
 }
 
-bool ReverbProcessor::producesMidi() const
+bool SpreadraProcessor::producesMidi() const
 {
     return false;
 }
 
-bool ReverbProcessor::isMidiEffect() const
+bool SpreadraProcessor::isMidiEffect() const
 {
     return false;
 }
 
-double ReverbProcessor::getTailLengthSeconds() const
+double SpreadraProcessor::getTailLengthSeconds() const
 {
     float currentDecayTime = parameters.getRawParameterValue("decayTime")->load();
     float roomSize = parameters.getRawParameterValue("roomSize")->load();
@@ -129,41 +129,41 @@ double ReverbProcessor::getTailLengthSeconds() const
 }
 
 //==============================================================================
-int ReverbProcessor::getNumPrograms()
+int SpreadraProcessor::getNumPrograms()
 {
     return 1;
 }
 
-int ReverbProcessor::getCurrentProgram()
+int SpreadraProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void ReverbProcessor::setCurrentProgram(int index)
+void SpreadraProcessor::setCurrentProgram(int index)
 {
     juce::ignoreUnused(index);
 }
 
-const juce::String ReverbProcessor::getProgramName(int index)
+const juce::String SpreadraProcessor::getProgramName(int index)
 {
     juce::ignoreUnused(index);
     return {};
 }
 
-void ReverbProcessor::changeProgramName(int index, const juce::String& newName)
+void SpreadraProcessor::changeProgramName(int index, const juce::String& newName)
 {
     juce::ignoreUnused(index, newName);
 }
 
 //==============================================================================
-void ReverbProcessor::getStateInformation(juce::MemoryBlock& destData)
+void SpreadraProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     auto state = parameters.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
 }
 
-void ReverbProcessor::setStateInformation(const void* data, int sizeInBytes)
+void SpreadraProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
     
@@ -173,28 +173,16 @@ void ReverbProcessor::setStateInformation(const void* data, int sizeInBytes)
 }
 
 //==============================================================================
-juce::AudioProcessorValueTreeState::ParameterLayout ReverbProcessor::createParameterLayout()
+juce::AudioProcessorValueTreeState::ParameterLayout SpreadraProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
-    // Reverbix parameters
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "roomSize", "Room Size", juce::NormalisableRange<float>(10.0f, 10000.0f, 10.0f), 5005.0f,
-        juce::String(), juce::AudioProcessorParameter::genericParameter,
-        [](float value, int) { return juce::String(value, 0) + " m²"; }));
-    
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "decayTime", "Decay Time", juce::NormalisableRange<float>(0.1f, 20.0f, 0.1f), 10.05f,
-        juce::String(), juce::AudioProcessorParameter::genericParameter,
-        [](float value, int) { return juce::String(value, 1) + " s"; }));
-    
-    // Mix parameters
+    // Spreadra parameters
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         "dryWet", "Dry/Wet", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 50.0f,
         juce::String(), juce::AudioProcessorParameter::genericParameter,
         [](float value, int) { return juce::String(value, 0) + "%"; }));
     
-    // Stereo parameters  
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         "stereoWidth", "Stereo Width", juce::NormalisableRange<float>(0.0f, 200.0f, 1.0f), 100.0f,
         juce::String(), juce::AudioProcessorParameter::genericParameter,
@@ -203,22 +191,18 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReverbProcessor::createParam
     return { params.begin(), params.end() };
 }
 
-void ReverbProcessor::updateParameters()
+void SpreadraProcessor::updateParameters()
 {
     // Получение параметров из AudioProcessorValueTreeState
-    float roomSize = parameters.getRawParameterValue("roomSize")->load();
-    float decayTime = parameters.getRawParameterValue("decayTime")->load();
     float dryWet = parameters.getRawParameterValue("dryWet")->load();
     float stereoWidth = parameters.getRawParameterValue("stereoWidth")->load();
     
-    // Обновление параметров reverbix-ядра
-    reverbAlgorithm.setRoomSize(roomSize);
-    reverbAlgorithm.setDecayTime(decayTime);
+    // Обновление параметров Spreadra-ядра
     reverbAlgorithm.setDryWet(dryWet);
     reverbAlgorithm.setStereoWidth(stereoWidth);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new ReverbProcessor();
+    return new SpreadraProcessor();
 } 

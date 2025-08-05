@@ -7,7 +7,7 @@
 #include "utils/Logger.h"
 
 /**
- * @brief Основной аудио-процессор для Reverb плагина
+ * @brief Основной аудио-процессор для Spreadra плагина
  * 
  * Этот класс является центральным компонентом плагина, который:
  * - Управляет DSP алгоритмами
@@ -15,12 +15,12 @@
  * - Интегрируется с JUCE AudioProcessor
  * - Управляет параметрами плагина
  */
-class ReverbProcessor : public juce::AudioProcessor
+class SpreadraProcessor : public juce::AudioProcessor
 {
 public:
     //==============================================================================
-    ReverbProcessor();
-    ~ReverbProcessor() override;
+    SpreadraProcessor();
+    ~SpreadraProcessor() override;
 
     //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -86,5 +86,5 @@ private:
     void updateParameters();
     
     // JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReverbProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpreadraProcessor)
 }; 

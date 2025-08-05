@@ -34,13 +34,13 @@ echo "Переконфигурирую CMake..."
 cd build_simple && cmake .. && cd ..
 
 echo "Компилирую плагин..."
-cmake --build build_simple --target Reverbix_AU
+cmake --build build_simple --target Spreadra_AU
 
 echo "✅ Версия обновлена до $NEW_VERSION"
 echo "✅ Плагин скомпилирован и установлен"
 
 # Проверяем что версия в плагине правильная
-PLUGIN_VERSION=$(strings "/Users/azverev/Library/Audio/Plug-Ins/Components/Reverbix.component/Contents/MacOS/Reverbix" | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | head -1)
+PLUGIN_VERSION=$(strings "/Users/azverev/Library/Audio/Plug-Ins/Components/Spreadra.component/Contents/MacOS/Spreadra" | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | head -1)
 
 if [ "$PLUGIN_VERSION" = "$NEW_VERSION" ]; then
     echo "✅ Версия в плагине: $PLUGIN_VERSION"

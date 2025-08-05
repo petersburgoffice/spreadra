@@ -1,11 +1,11 @@
-Reverbix License Agreement
+Spreadra License Agreement
 
-Copyright (c) 2024 Reverbix. All rights reserved.
+Copyright (c) 2024 Spreadra. All rights reserved.
 
 This software is proprietary and confidential. By installing this software, you agree to the following terms:
 
 1. LICENSE GRANT
-   This software is licensed, not sold, to you by Reverbix for use under the terms of this license agreement.
+   This software is licensed, not sold, to you by Spreadra for use under the terms of this license agreement.
 
 2. PERMITTED USE
    You may install and use this software on any number of computers you own or control.
@@ -17,13 +17,13 @@ This software is proprietary and confidential. By installing this software, you 
    - Remove or alter any proprietary notices or labels
 
 4. OWNERSHIP
-   Reverbix retains all right, title, and interest in and to the software.
+   Spreadra retains all right, title, and interest in and to the software.
 
 5. WARRANTY DISCLAIMER
    This software is provided "as is" without warranty of any kind, either express or implied.
 
 6. LIMITATION OF LIABILITY
-   Reverbix shall not be liable for any damages arising from the use of this software.
+   Spreadra shall not be liable for any damages arising from the use of this software.
 
 7. TERMINATION
    This license is effective until terminated. It will terminate immediately without notice if you fail to comply with any term of this license.

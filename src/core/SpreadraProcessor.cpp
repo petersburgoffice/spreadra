@@ -177,16 +177,21 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpreadraProcessor::createPar
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
-    // Spreadra parameters
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "dryWet", "Dry/Wet", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 50.0f,
-        juce::String(), juce::AudioProcessorParameter::inputGain,
-        [](float value, int) { return juce::String(value, 0) + "%"; }));
+    // Use consistent parameter IDs for VST3 compatibility
+    auto dryWetParam = std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{"dryWet", 1}, "Dry/Wet", 
+        juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 50.0f,
+        juce::AudioParameterFloatAttributes().withStringFromValueFunction(
+            [](float value, int) { return juce::String(value, 0) + "%"; }));
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "stereoWidth", "Stereo Width", juce::NormalisableRange<float>(0.0f, 200.0f, 1.0f), 100.0f,
-        juce::String(), juce::AudioProcessorParameter::inputGain,
-        [](float value, int) { return juce::String(value, 0) + "%"; }));
+    auto stereoWidthParam = std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{"stereoWidth", 1}, "Stereo Width",
+        juce::NormalisableRange<float>(0.0f, 200.0f, 1.0f), 100.0f,
+        juce::AudioParameterFloatAttributes().withStringFromValueFunction(
+            [](float value, int) { return juce::String(value, 0) + "%"; }));
+    
+    params.push_back(std::move(dryWetParam));
+    params.push_back(std::move(stereoWidthParam));
     
     return { params.begin(), params.end() };
 }

@@ -50,6 +50,15 @@ juce_add_plugin(Spreadra
     PRODUCT_NAME "Spreadra"
 )
 
+# Force modern parameter indexing
+target_compile_definitions(Spreadra PRIVATE
+    JUCE_FORCE_USE_LEGACY_PARAM_IDS=0
+)
+
+target_compile_definitions(Spreadra_AU PRIVATE  
+    JUCE_FORCE_USE_LEGACY_PARAM_IDS=0
+)
+
 target_sources(Spreadra PRIVATE ${SHIMMER_SOURCES})
 
 # Add binary resources

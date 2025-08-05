@@ -24,13 +24,11 @@ fi
 AU_PLUGIN=$(find "$BUILD_DIR" -name "*.component" -type d | head -1)
 VST3_PLUGIN=$(find "$BUILD_DIR" -name "*.vst3" -type d | head -1)
 AAX_PLUGIN=$(find "$BUILD_DIR" -name "*.aaxplugin" -type d | head -1)
-STANDALONE_APP=$(find "$BUILD_DIR" -name "Spreadra.app" -type d | head -1)
 
 echo "📦 Found plugins:"
 [ -n "$AU_PLUGIN" ] && echo "   AU: $AU_PLUGIN"
 [ -n "$VST3_PLUGIN" ] && echo "   VST3: $VST3_PLUGIN"
 [ -n "$AAX_PLUGIN" ] && echo "   AAX: $AAX_PLUGIN"
-[ -n "$STANDALONE_APP" ] && echo "   Standalone: $STANDALONE_APP"
 
 # Verify architectures if plugins exist
 echo ""
@@ -50,9 +48,7 @@ if [ -n "$AAX_PLUGIN" ]; then
     lipo -info "$AAX_PLUGIN/Contents/MacOS/"* 2>/dev/null | head -1 || echo "   AAX binary not found"
 fi
 
-if [ -n "$STANDALONE_APP" ]; then
-    echo "Standalone App:"
-    lipo -info "$STANDALONE_APP/Contents/MacOS/"* 2>/dev/null | head -1 || echo "   Standalone binary not found"
+if false; then
 fi
 
 # Create temporary directory for installer files
@@ -84,9 +80,7 @@ if [ -n "$AAX_PLUGIN" ]; then
     cp -R "$AAX_PLUGIN" "$INSTALLER_ROOT/Library/Application Support/Avid/Audio/Plug-Ins/"
 fi
 
-if [ -n "$STANDALONE_APP" ]; then
-    echo "   Copying Standalone app..."
-    cp -R "$STANDALONE_APP" "$INSTALLER_ROOT/Applications/"
+if false; then
 fi
 
 # Create installer package
@@ -117,7 +111,6 @@ if [ -f "$INSTALLER_PATH" ]; then
     [ -n "$AU_PLUGIN" ] && echo "   • AU: ~/Library/Audio/Plug-Ins/Components/"
     [ -n "$VST3_PLUGIN" ] && echo "   • VST3: ~/Library/Audio/Plug-Ins/VST3/"
     [ -n "$AAX_PLUGIN" ] && echo "   • AAX: ~/Library/Application Support/Avid/Audio/Plug-Ins/"
-    [ -n "$STANDALONE_APP" ] && echo "   • Standalone: /Applications/"
 else
     echo "❌ Failed to create installer"
     exit 1

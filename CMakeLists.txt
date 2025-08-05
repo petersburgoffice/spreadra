@@ -46,7 +46,7 @@ juce_add_plugin(Spreadra
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     PLUGIN_MANUFACTURER_CODE Snmk
     PLUGIN_CODE Spdr
-    FORMATS AU Standalone
+    FORMATS AU
     PRODUCT_NAME "Spreadra"
 )
 

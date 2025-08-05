@@ -180,12 +180,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpreadraProcessor::createPar
     // Spreadra parameters
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         "dryWet", "Dry/Wet", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 50.0f,
-        juce::String(), juce::AudioProcessorParameter::genericParameter,
+        juce::String(), juce::AudioProcessorParameter::inputGain,
         [](float value, int) { return juce::String(value, 0) + "%"; }));
     
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         "stereoWidth", "Stereo Width", juce::NormalisableRange<float>(0.0f, 200.0f, 1.0f), 100.0f,
-        juce::String(), juce::AudioProcessorParameter::genericParameter,
+        juce::String(), juce::AudioProcessorParameter::inputGain,
         [](float value, int) { return juce::String(value, 0) + "%"; }));
     
     return { params.begin(), params.end() };

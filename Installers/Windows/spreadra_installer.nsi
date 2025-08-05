@@ -7,16 +7,14 @@
 ; Installer Information
 !define PRODUCT_NAME "Spreadra"
 !define PRODUCT_VERSION "0.9.21"
-!define PRODUCT_PUBLISHER "Spreadra"
+!define PRODUCT_PUBLISHER "SonicMakers"
 !define PRODUCT_WEB_SITE "https://github.com/petersburgoffice/spreadra"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\Spreadra"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 
-; MUI Settings
+; MUI Settings (no icons)
 !define MUI_ABORTWARNING
-; !define MUI_ICON "..\..\resources\icon.ico"
-; !define MUI_UNICON "..\..\resources\icon.ico"
 
 ; Welcome page
 !insertmacro MUI_PAGE_WELCOME
@@ -42,158 +40,106 @@
 ; Language files
 !insertmacro MUI_LANGUAGE "English"
 
-; Installer details
+; Installer attributes
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "Spreadra_${PRODUCT_VERSION}_Windows_Installer.exe"
-InstallDir "$PROGRAMFILES64\Common Files\VST3"
-InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
+InstallDir "$PROGRAMFILES64\${PRODUCT_NAME}"
 ShowInstDetails show
 ShowUnInstDetails show
 
-; Version Information
-VIProductVersion "${PRODUCT_VERSION}.0"
-VIAddVersionKey /LANG=${LANG_ENGLISH} "ProductName" "${PRODUCT_NAME}"
-VIAddVersionKey /LANG=${LANG_ENGLISH} "Comments" "Professional Reverb Plugin"
-VIAddVersionKey /LANG=${LANG_ENGLISH} "CompanyName" "${PRODUCT_PUBLISHER}"
-VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright" "© 2024 ${PRODUCT_PUBLISHER}"
-VIAddVersionKey /LANG=${LANG_ENGLISH} "FileDescription" "${PRODUCT_NAME} Installer"
-VIAddVersionKey /LANG=${LANG_ENGLISH} "FileVersion" "${PRODUCT_VERSION}"
-VIAddVersionKey /LANG=${LANG_ENGLISH} "ProductVersion" "${PRODUCT_VERSION}"
-
-; Request application privileges for Windows Vista/7/8/10/11
+; Request admin privileges
 RequestExecutionLevel admin
 
-; Installer Sections
-Section "VST3 Plugin (Required)" SEC01
-  SectionIn RO
-  
-  ; Set output path to VST3 directory
-  SetOutPath "$INSTDIR"
-  
-  ; Copy VST3 plugin
-  File /r "..\..\build\Spreadra_artefacts\VST3\Spreadra.vst3"
-  
-  ; Create uninstaller
-  WriteUninstaller "$INSTDIR\Spreadra Uninstaller.exe"
-  
-  ; Registry entries
-  WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\Spreadra.vst3"
-  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayName" "$(^Name)"
-  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\Spreadra Uninstaller.exe"
-  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\Spreadra.vst3"
-  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
-  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
-  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
-  
-  ; Calculate installed size
-  ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
-  IntFmt $0 "0x%08X" $0
-  WriteRegDWORD ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "EstimatedSize" "$0"
-SectionEnd
-
-Section "AAX Plugin (Pro Tools)" SEC02
-  ; Set output path to AAX directory
-  SetOutPath "$PROGRAMFILES64\Common Files\Avid\Audio\Plug-Ins"
-  
-  ; Copy AAX plugin if it exists
-  IfFileExists "..\..\build\Spreadra_artefacts\AAX\Spreadra.aaxplugin" 0 skip_aax
-    File /r "..\..\build\Spreadra_artefacts\AAX\Spreadra.aaxplugin"
-  skip_aax:
-SectionEnd
-
-Section "Standalone Application" SEC03
-  ; Set output path to Program Files
-  SetOutPath "$PROGRAMFILES64\${PRODUCT_NAME}"
-  
-  ; Copy standalone application if it exists
-  IfFileExists "..\..\build\Spreadra_artefacts\Standalone\Spreadra.exe" 0 skip_standalone
-    File "..\..\build\Spreadra_artefacts\Standalone\Spreadra.exe"
+; Install Sections
+Section "VST3 Plugin" SEC01
+    SetOutPath "$PROGRAMFILES64\Common Files\VST3"
+    SetOverwrite ifnewer
     
-    ; Create desktop shortcut if standalone exists
-    CreateShortCut "$DESKTOP\${PRODUCT_NAME}.lnk" "$PROGRAMFILES64\${PRODUCT_NAME}\Spreadra.exe"
-  skip_standalone:
+    ; Check if VST3 plugin exists
+    IfFileExists "..\..\build\Spreadra_artefacts\VST3\Spreadra.vst3" 0 skip_vst3
+    File /r "..\..\build\Spreadra_artefacts\VST3\Spreadra.vst3"
+    skip_vst3:
 SectionEnd
 
-Section "Desktop Shortcut" SEC04
-  ; Only create if standalone app was installed
-  IfFileExists "$PROGRAMFILES64\${PRODUCT_NAME}\Spreadra.exe" 0 skip_desktop
-    CreateShortCut "$DESKTOP\${PRODUCT_NAME}.lnk" "$PROGRAMFILES64\${PRODUCT_NAME}\Spreadra.exe"
-  skip_desktop:
+Section "Core Files" SEC02
+    SetOutPath "$INSTDIR"
+    SetOverwrite ifnewer
+    
+    ; Create uninstaller
+    WriteUninstaller "$INSTDIR\Spreadra Uninstaller.exe"
+    
+    ; Write registry keys for Windows Add/Remove Programs
+    WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR"
+    WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayName" "$(^Name)"
+    WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\Spreadra Uninstaller.exe"
+    WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
+    WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
+    WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
 SectionEnd
 
-Section "Start Menu Shortcuts" SEC05
-  CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
-  
-  ; Create shortcuts for installed components
-  IfFileExists "$PROGRAMFILES64\${PRODUCT_NAME}\Spreadra.exe" 0 +2
-    CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk" "$PROGRAMFILES64\${PRODUCT_NAME}\Spreadra.exe"
-  
-  CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall.lnk" "$INSTDIR\Spreadra Uninstaller.exe"
+Section "AAX Plugin (Pro Tools)" SEC03
+    SetOutPath "$PROGRAMFILES64\Common Files\Avid\Audio\Plug-Ins"
+    SetOverwrite ifnewer
+    
+    ; Check if AAX plugin exists  
+    IfFileExists "..\..\build\Spreadra_artefacts\AAX\Spreadra.aaxplugin" 0 skip_aax
+    File /r "..\..\build\Spreadra_artefacts\AAX\Spreadra.aaxplugin"
+    skip_aax:
 SectionEnd
 
 ; Section descriptions
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-  !insertmacro MUI_DESCRIPTION_TEXT ${SEC01} "The main VST3 plugin file. This is required for the plugin to work in your DAW."
-  !insertmacro MUI_DESCRIPTION_TEXT ${SEC02} "AAX plugin for Pro Tools (if available)."
-  !insertmacro MUI_DESCRIPTION_TEXT ${SEC03} "Standalone application that can run independently of a DAW."
-  !insertmacro MUI_DESCRIPTION_TEXT ${SEC04} "Creates a shortcut on your desktop for the standalone application."
-  !insertmacro MUI_DESCRIPTION_TEXT ${SEC05} "Creates shortcuts in the Start Menu."
+    !insertmacro MUI_DESCRIPTION_TEXT ${SEC01} "VST3 plugin for use in DAWs like Cubase, FL Studio, etc."
+    !insertmacro MUI_DESCRIPTION_TEXT ${SEC02} "Core application files and uninstaller"
+    !insertmacro MUI_DESCRIPTION_TEXT ${SEC03} "AAX plugin for Pro Tools (requires Pro Tools to be installed)"
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
-; Installer Functions
-Function .onInit
-  ; Check if already installed
-  ReadRegStr $R0 ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString"
-  StrCmp $R0 "" done
-  
-  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
-  "${PRODUCT_NAME} is already installed. $\n$\nClick `OK` to remove the \
-  previous version or `Cancel` to cancel this upgrade." \
-  IDOK uninst
-  Abort
-  
-uninst:
-  ClearErrors
-  ExecWait '$R0 _?=$INSTDIR'
-  
-  IfErrors no_remove_uninstaller done
-    Delete $R0
-    RMDir $INSTDIR
-  
-no_remove_uninstaller:
-  
-done:
-FunctionEnd
-
-; Uninstaller Section
-Section Uninstall
-  ; Remove plugin files
-  RMDir /r "$INSTDIR\Spreadra.vst3"
-  RMDir /r "$PROGRAMFILES64\Common Files\Avid\Audio\Plug-Ins\Spreadra.aaxplugin"
-  RMDir /r "$PROGRAMFILES64\${PRODUCT_NAME}"
-  Delete "$INSTDIR\Spreadra Uninstaller.exe"
-  
-  ; Remove shortcuts
-  Delete "$DESKTOP\${PRODUCT_NAME}.lnk"
-  RMDir /r "$SMPROGRAMS\${PRODUCT_NAME}"
-  
-  ; Remove registry keys
-  DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
-  DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"
-  
-  ; Remove installation directory if empty
-  RMDir "$INSTDIR"
-  
-  SetAutoClose true
+; Uninstaller
+Section "Uninstall"
+    ; Remove registry keys
+    DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
+    DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"
+    
+    ; Remove plugins
+    RMDir /r "$PROGRAMFILES64\Common Files\VST3\Spreadra.vst3"
+    RMDir /r "$PROGRAMFILES64\Common Files\Avid\Audio\Plug-Ins\Spreadra.aaxplugin"
+    
+    ; Remove uninstaller
+    Delete "$INSTDIR\Spreadra Uninstaller.exe"
+    RMDir "$INSTDIR"
+    
+    SetAutoClose true
 SectionEnd
 
-; Uninstaller Functions
-Function un.onUninstSuccess
-  HideWindow
-  MessageBox MB_ICONINFORMATION|MB_OK "$(^Name) was successfully removed from your computer."
+; Functions
+Function .onInit
+    ; Check if already installed
+    ReadRegStr $R0 ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString"
+    StrCmp $R0 "" done
+    
+    MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
+    "${PRODUCT_NAME} is already installed. $\n$\nClick `OK` to remove the \
+    previous version or `Cancel` to cancel this upgrade." \
+    IDOK uninst
+    Abort
+    
+    ; Run the uninstaller
+    uninst:
+        ClearErrors
+        ExecWait '$R0 _?=$INSTDIR'
+        
+        IfErrors no_remove_uninstaller done
+        no_remove_uninstaller:
+    
+    done:
 FunctionEnd
 
 Function un.onInit
-  MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Are you sure you want to completely remove $(^Name) and all of its components?" IDYES +2
-  Abort
-FunctionEnd 
+    MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Are you sure you want to completely remove $(^Name) and all of its components?" IDYES +2
+    Abort
+FunctionEnd
+
+Function un.onUninstSuccess
+    HideWindow
+    MessageBox MB_ICONINFORMATION|MB_OK "$(^Name) was successfully removed from your computer."
+FunctionEnd
